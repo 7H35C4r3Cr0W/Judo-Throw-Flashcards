@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Judo Throws Flashcard Quiz</title>
 <style>
   :root {
@@ -854,18 +857,38 @@ const KEY = {
   throws:  "judo_quiz_throws_v1",
   prefs:   "judo_quiz_prefs_v1"
 };
+// Keys whose values must NOT survive a browser session (closing the tab/window).
+// The in-progress quiz lives in sessionStorage so:
+//   - an accidental refresh keeps your progress,
+//   - closing the tab/window gives every visitor a fresh page on next open.
+const SESSION_KEYS = new Set([KEY.current]);
+
+function _backendFor(key) {
+  return SESSION_KEYS.has(key) ? sessionStorage : localStorage;
+}
+
 const storage = {
   get(key, fallback) {
     try {
-      const v = localStorage.getItem(key);
+      const v = _backendFor(key).getItem(key);
       if (v === null) return fallback;
       const parsed = JSON.parse(v);
       return parsed === null || parsed === undefined ? fallback : parsed;
     } catch { return fallback; }
   },
-  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
-  del(key)      { try { localStorage.removeItem(key); } catch {} }
+  set(key, val) { try { _backendFor(key).setItem(key, JSON.stringify(val)); } catch {} },
+  del(key) {
+    // Defensive: also remove from the *other* backend in case legacy data
+    // is still hanging around from an older version of this app.
+    try { sessionStorage.removeItem(key); } catch {}
+    try { localStorage.removeItem(key); } catch {}
+  }
 };
+
+// One-time cleanup: previous versions of this app persisted the in-progress
+// quiz to localStorage, which made the page look like a test was still in
+// progress every time it was reopened. Wipe any legacy entry on load.
+try { localStorage.removeItem(KEY.current); } catch {}
 
 /* ═══════════════════════════════════════════════════════════════
    State
@@ -1183,12 +1206,20 @@ function resumeQuiz() {
 }
 
 function discardCurrent() {
-  if (!confirm("Discard the in-progress quiz? Your progress will be lost.")) return;
-  // Clear in-memory quiz too so the beforeunload handler can't re-save it,
+  // Only ask for confirmation when there's actually something to lose.
+  const cur = storage.get(KEY.current, null);
+  const answered = (cur && Array.isArray(cur.results)) ? cur.results.length : 0;
+  if (answered > 0) {
+    if (!confirm(`Discard the in-progress quiz? You'll lose ${answered} answered question${answered === 1 ? "" : "s"}.`)) return;
+  }
+  // Wipe in-memory quiz first so beforeunload can't re-save it,
   // and stop any running timer to avoid late writes.
   state.quiz = null;
   stopTimer();
-  storage.del(KEY.current);
+  storage.del(KEY.current);          // clears both session and local backends
+  // Belt-and-braces: directly nuke the raw entries too in case anything else races us.
+  try { sessionStorage.removeItem(KEY.current); } catch {}
+  try { localStorage.removeItem(KEY.current);   } catch {}
   refreshHome();
 }
 
