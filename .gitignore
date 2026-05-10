@@ -1,0 +1,25 @@
+# OS junk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Local server / dev artifacts
+node_modules/
+.cache/
+__pycache__/
+
+# Temporary files
+_kill_server.ps1
+*.tmp
