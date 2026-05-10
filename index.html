@@ -170,17 +170,6 @@
     background: var(--panel-3); border: 1px solid var(--border-2); color: var(--muted);
   }
 
-  /* ───── Resume banner ───── */
-  .resume-banner {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; padding: 14px 16px; margin-bottom: 16px;
-    background: linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.04));
-    border: 1px solid rgba(245,158,11,0.4);
-    border-radius: 14px;
-  }
-  .resume-banner strong { color: #ffe9b5; }
-  .resume-actions { display: flex; gap: 8px; }
-
   /* ───── Lifetime stats grid ───── */
   .stats-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
@@ -594,18 +583,6 @@
         </div>
       </section>
 
-      <!-- Resume -->
-      <section id="resumeBanner" class="resume-banner" hidden>
-        <div>
-          <strong>You have a quiz in progress</strong>
-          <div class="muted small" id="resumeMeta"></div>
-        </div>
-        <div class="resume-actions">
-          <button class="btn primary" id="resumeBtn">Resume</button>
-          <button class="btn danger" id="discardBtn">Discard</button>
-        </div>
-      </section>
-
       <!-- Lifetime stats -->
       <section class="stats-grid">
         <div class="stat-card">
@@ -857,38 +834,26 @@ const KEY = {
   throws:  "judo_quiz_throws_v1",
   prefs:   "judo_quiz_prefs_v1"
 };
-// Keys whose values must NOT survive a browser session (closing the tab/window).
-// The in-progress quiz lives in sessionStorage so:
-//   - an accidental refresh keeps your progress,
-//   - closing the tab/window gives every visitor a fresh page on next open.
-const SESSION_KEYS = new Set([KEY.current]);
-
-function _backendFor(key) {
-  return SESSION_KEYS.has(key) ? sessionStorage : localStorage;
-}
-
 const storage = {
   get(key, fallback) {
     try {
-      const v = _backendFor(key).getItem(key);
+      const v = localStorage.getItem(key);
       if (v === null) return fallback;
       const parsed = JSON.parse(v);
       return parsed === null || parsed === undefined ? fallback : parsed;
     } catch { return fallback; }
   },
-  set(key, val) { try { _backendFor(key).setItem(key, JSON.stringify(val)); } catch {} },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
   del(key) {
-    // Defensive: also remove from the *other* backend in case legacy data
-    // is still hanging around from an older version of this app.
     try { sessionStorage.removeItem(key); } catch {}
     try { localStorage.removeItem(key); } catch {}
   }
 };
 
-// One-time cleanup: previous versions of this app persisted the in-progress
-// quiz to localStorage, which made the page look like a test was still in
-// progress every time it was reopened. Wipe any legacy entry on load.
-try { localStorage.removeItem(KEY.current); } catch {}
+function clearInProgressStorage() {
+  storage.del(KEY.current);
+}
+clearInProgressStorage();
 
 /* ═══════════════════════════════════════════════════════════════
    State
@@ -965,7 +930,7 @@ function showView(v) {
    Home: rendering
 ═══════════════════════════════════════════════════════════════ */
 function refreshHome() {
-  renderResumeBanner();
+  clearInProgressStorage();
   renderLifetimeStats();
   renderRecentTests();
   renderFocusList();
@@ -1023,31 +988,6 @@ function loadPrefs() {
   });
 }
 
-function isValidInProgress(cur) {
-  if (!cur || typeof cur !== "object") return false;
-  if (!Array.isArray(cur.deck) || cur.deck.length === 0) return false;
-  if (typeof cur.qIndex !== "number" || cur.qIndex < 0) return false;
-  if (cur.qIndex >= cur.deck.length) return false;
-  // Drop very old in-progress sessions automatically (older than 7 days)
-  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-  if (cur.startedAt && (Date.now() - cur.startedAt) > SEVEN_DAYS) return false;
-  return true;
-}
-
-function renderResumeBanner() {
-  const cur = storage.get(KEY.current, null);
-  const banner = $("resumeBanner");
-  if (!isValidInProgress(cur)) {
-    if (cur) storage.del(KEY.current); // clean stale/invalid state
-    banner.hidden = true;
-    return;
-  }
-  banner.hidden = false;
-  const remaining = cur.deck.length - cur.qIndex;
-  $("resumeMeta").textContent =
-    `${MODE_LABEL[cur.mode] || cur.mode} · ${cur.qIndex} done · ${remaining} remaining · score ${cur.score}/${cur.qIndex}`;
-}
-
 function renderLifetimeStats() {
   const hist = storage.get(KEY.history, []);
   const ts = storage.get(KEY.throws, {});
@@ -1058,10 +998,6 @@ function renderLifetimeStats() {
     totalC += h.score || 0;
     bestStreak = Math.max(bestStreak, h.bestStreak || 0);
   }
-  // also consider in-progress for streak
-  const cur = storage.get(KEY.current, null);
-  if (cur) bestStreak = Math.max(bestStreak, cur.bestStreak || 0);
-
   let mastered = 0;
   for (const t of THROWS) {
     const s = ts[t.name];
@@ -1182,50 +1118,10 @@ function startQuiz(restartFromState) {
     currentOptions: null,
     results: []
   };
-  saveCurrent();
   showView("quiz");
   $("qTotal").textContent = deck.length;
   startTimer();
   renderQuestion();
-}
-
-function resumeQuiz() {
-  const cur = storage.get(KEY.current, null);
-  if (!isValidInProgress(cur)) {
-    storage.del(KEY.current);
-    refreshHome();
-    return;
-  }
-  state.quiz = cur;
-  state.mode = cur.mode;
-  state.selectedBelts = new Set(cur.selectedBelts || BELT_ORDER);
-  showView("quiz");
-  $("qTotal").textContent = cur.deck.length;
-  startTimer();
-  renderQuestion(/*resume*/ true);
-}
-
-function discardCurrent() {
-  // Only ask for confirmation when there's actually something to lose.
-  const cur = storage.get(KEY.current, null);
-  const answered = (cur && Array.isArray(cur.results)) ? cur.results.length : 0;
-  if (answered > 0) {
-    if (!confirm(`Discard the in-progress quiz? You'll lose ${answered} answered question${answered === 1 ? "" : "s"}.`)) return;
-  }
-  // Wipe in-memory quiz first so beforeunload can't re-save it,
-  // and stop any running timer to avoid late writes.
-  state.quiz = null;
-  stopTimer();
-  storage.del(KEY.current);          // clears both session and local backends
-  // Belt-and-braces: directly nuke the raw entries too in case anything else races us.
-  try { sessionStorage.removeItem(KEY.current); } catch {}
-  try { localStorage.removeItem(KEY.current);   } catch {}
-  refreshHome();
-}
-
-function saveCurrent() {
-  if (!state.quiz) return;
-  storage.set(KEY.current, state.quiz);
 }
 
 function startTimer() {
@@ -1242,7 +1138,7 @@ function stopTimer() {
   timerHandle = null;
 }
 
-function renderQuestion(isResume) {
+function renderQuestion() {
   const q = state.quiz;
   const t = q.deck[q.qIndex];
   $("qIndex").textContent = q.qIndex + 1;
@@ -1285,17 +1181,10 @@ function renderQuestion(isResume) {
     correctLabel = t.english;
   }
 
-  // reuse persisted options on resume to keep behaviour stable
-  let opts;
-  if (isResume && Array.isArray(q.currentOptions) && q.currentCorrect === correctLabel) {
-    opts = q.currentOptions;
-  } else {
-    const distractors = pickDistinct(THROWS, t, 3, labelKey);
-    opts = shuffle([t, ...distractors]).map(labelKey);
-    q.currentCorrect = correctLabel;
-    q.currentOptions = opts;
-    saveCurrent();
-  }
+  const distractors = pickDistinct(THROWS, t, 3, labelKey);
+  const opts = shuffle([t, ...distractors]).map(labelKey);
+  q.currentCorrect = correctLabel;
+  q.currentOptions = opts;
 
   // render option buttons
   const optsHost = $("options");
@@ -1314,7 +1203,6 @@ function renderQuestion(isResume) {
   fb.textContent = "";
   $("nextBtn").disabled = true;
   q.answered = false;
-  saveCurrent();
 }
 
 function handleAnswer(btn, chosen) {
@@ -1374,7 +1262,6 @@ function handleAnswer(btn, chosen) {
 
   $("nextBtn").disabled = false;
   $("nextBtn").focus();
-  saveCurrent();
 }
 
 function updateThrowStats(name, correct) {
@@ -1395,7 +1282,6 @@ function nextQuestion() {
     finishQuiz(false);
     return;
   }
-  saveCurrent();
   renderQuestion();
 }
 
@@ -1571,8 +1457,9 @@ function closeModal() { $("historyModal").hidden = true; }
    Quit / home from quiz
 ═══════════════════════════════════════════════════════════════ */
 function goHomeFromQuiz() {
-  // current quiz is auto-saved. Just go home.
   stopTimer();
+  state.quiz = null;
+  clearInProgressStorage();
   showView("home");
 }
 
@@ -1594,7 +1481,7 @@ function endNow() {
    Reset all
 ═══════════════════════════════════════════════════════════════ */
 function resetAll() {
-  if (!confirm("Erase all stats, history, and the in-progress quiz? This cannot be undone.")) return;
+  if (!confirm("Erase all stats and history? This cannot be undone.")) return;
   storage.del(KEY.current);
   storage.del(KEY.history);
   storage.del(KEY.throws);
@@ -1632,9 +1519,6 @@ function wire() {
   $("retryWrongBtn").addEventListener("click", retryWrongOnly);
   $("backBtn").addEventListener("click", () => showView("home"));
 
-  $("resumeBtn").addEventListener("click", resumeQuiz);
-  $("discardBtn").addEventListener("click", discardCurrent);
-
   $("historyBtn").addEventListener("click", openHistoryList);
   $("viewAllHistoryBtn").addEventListener("click", openHistoryList);
   $("resetAllBtn").addEventListener("click", resetAll);
@@ -1655,9 +1539,6 @@ function wire() {
       if (!nb.disabled) { e.preventDefault(); nb.click(); }
     }
   });
-
-  // Save quiz state defensively before unload
-  window.addEventListener("beforeunload", () => { if (state.quiz) saveCurrent(); });
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -48,7 +48,7 @@ That's the whole project. Open `index.html` and you're done.
 
 ### Smart progress tracking
 
-- **Resume on refresh** — accidentally close the tab? The in‑progress quiz is auto‑saved every answer; reopen and click **Resume**.
+- **Fresh start every visit** — the app never ships with a saved quiz in progress; each browser starts clean.
 - **Test history** — every completed (and partial) attempt is logged with score, mode, time, and best streak. Click any row to see a per‑question breakdown.
 - **Throws to focus on** — your weakest throws automatically surface on the home page, sorted by accuracy.
 - **Mastery tracking** — a throw counts as "mastered" once you've answered it correctly ≥80% over 3+ attempts.
@@ -59,8 +59,8 @@ That's the whole project. Open `index.html` and you're done.
 - Big animated GIF with belt‑colored badge (Yellow / Orange / Green / Blue / Brown / Preserved).
 - Live progress bar, score, streak, and timer.
 - Instant feedback: correct answer turns green, wrong turns red, and the right answer is highlighted.
-- **← Home** button anytime — your progress is saved automatically and you can resume later.
-- **End now** to save a partial test to history, or discard if you haven't answered anything yet.
+- **← Home** button anytime — return to the main screen and start fresh.
+- **End now** to save a partial test to history once you've answered questions.
 
 ### After a quiz
 
