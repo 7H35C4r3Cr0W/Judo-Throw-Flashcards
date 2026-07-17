@@ -14,6 +14,7 @@
   var TOTAL = THROWS.length;
   var THROW_BY_NAME = {};
   THROWS.forEach(function (t) { THROW_BY_NAME[t.name] = t; });
+  var ALL_NAMES = THROWS.map(function (t) { return t.name; });
 
   function $(id) { return document.getElementById(id); }
   var esc = C.escapeHtml;
@@ -26,7 +27,8 @@
     history: "judo_quiz_history_v1",
     throws: "judo_quiz_throws_v1",
     prefs: "judo_quiz_prefs_v1",
-    srs: "judo_quiz_srs_v1"
+    srs: "judo_quiz_srs_v1",
+    activity: "judo_quiz_activity_v1"
   };
 
   var storage = {
@@ -48,6 +50,47 @@
   function getHistory() { return C.sanitizeHistory(storage.get(KEY.history, [])); }
   function getThrowStats() { return C.sanitizeThrowStats(storage.get(KEY.throws, {})); }
   function getSrs() { return C.sanitizeSrs(storage.get(KEY.srs, {})); }
+  function getActivity() { return C.sanitizeActivity(storage.get(KEY.activity, {})); }
+
+  /* every finished quiz or study mark counts toward the day streak */
+  function recordActivity() {
+    var act = getActivity();
+    var today = C.ymd(Date.now());
+    act[today] = (act[today] || 0) + 1;
+    storage.set(KEY.activity, act);
+  }
+
+  /* ── Pronunciation (built-in speech synthesis, zero deps) ── */
+
+  var speechOK = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  var jaVoice = null;
+
+  /* the API can exist with zero voices installed (common on Linux) —
+     don't render dead 🔊 buttons in that case */
+  function speechUsable() {
+    return speechOK && window.speechSynthesis.getVoices().length > 0;
+  }
+
+  function pickJaVoice() {
+    if (!speechOK) return;
+    jaVoice = null; // voice list can change; never keep a stale voice
+    var voices = window.speechSynthesis.getVoices() || [];
+    for (var i = 0; i < voices.length; i++) {
+      if (/^ja([-_]|$)/i.test(voices[i].lang)) { jaVoice = voices[i]; return; }
+    }
+  }
+
+  function speakThrow(t) {
+    if (!speechOK) return;
+    try {
+      window.speechSynthesis.cancel();
+      // a Japanese voice reads the kanji correctly; otherwise romaji is closer
+      var u = new SpeechSynthesisUtterance(jaVoice ? t.kanji : t.name);
+      if (jaVoice) { u.voice = jaVoice; u.lang = jaVoice.lang; }
+      u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* speech is a bonus, never an error */ }
+  }
 
   /* ═══════════ State ═══════════ */
 
@@ -337,8 +380,11 @@
     var agg = C.aggregateLifetime(hist);
 
     $("lt-tests").textContent = agg.tests;
+    var dayStreak = C.computeDayStreak(getActivity(), Date.now());
     $("lt-tests-sub").textContent =
-      agg.tests === 0 ? "Get started above" : agg.tests === 1 ? "1 test completed" : agg.tests + " tests completed";
+      dayStreak >= 2 ? "🔥 " + dayStreak + "-day study streak" :
+      agg.tests === 0 ? "Get started above" :
+      agg.tests === 1 ? "1 test completed" : agg.tests + " tests completed";
     $("lt-acc").textContent = agg.accuracy === null ? "—" : Math.round(agg.accuracy * 100) + "%";
     $("lt-acc-sub").textContent = agg.totalQuestions
       ? agg.totalCorrect + " / " + agg.totalQuestions + " correct"
@@ -643,14 +689,22 @@
     var qMain = $("qMain");
     var hint = $("questionHint");
     var isVisual = q.currentQMode === "image-to-name";
+    var isType = q.currentQMode === "type-answer";
 
     unpauseGif();
     ensureMediaControls();
+    $("quizView").querySelector(".quiz-card").classList.toggle("has-image", isVisual || isType);
 
-    var labelKey, correctLabel;
-    if (isVisual) {
+    // reset hints for the new question
+    q.hintLevel = 0;
+    $("hintLine").hidden = true;
+    $("hintLine").textContent = "";
+    $("hintBtn").disabled = false;
+
+    var labelKey;
+    if (isVisual || isType) {
       qMain.textContent = "What throw is this?";
-      hint.textContent = "Pick the correct Japanese name";
+      hint.textContent = isType ? "Type the Japanese name — spelling is forgiving" : "Pick the correct Japanese name";
       imageWrap.style.display = "grid";
       loadQuizImage(t.img);
       labelKey = function (x) { return x.name; };
@@ -665,24 +719,40 @@
       imageWrap.style.display = "none";
       labelKey = function (x) { return x.english; };
     }
-    correctLabel = labelKey(t);
-
-    var distractors = C.pickSmartDistractors(THROWS, t, 3, labelKey);
-    var options = C.shuffle([t].concat(distractors));
-    q.currentCorrectIdx = options.indexOf(t);
+    q.currentLabelKey = labelKey;
 
     var optsHost = $("options");
+    var typeArea = $("typeArea");
     optsHost.innerHTML = "";
-    options.forEach(function (item, i) {
-      var b = document.createElement("button");
-      b.className = "option";
-      b.dataset.idx = i;
-      b.innerHTML =
-        '<span class="kbd" aria-hidden="true">' + (i + 1) + "</span>" +
-        '<span class="opt-label">' + esc(labelKey(item)) + "</span>";
-      b.addEventListener("click", function () { handleAnswer(i); });
-      optsHost.appendChild(b);
-    });
+
+    if (isType) {
+      optsHost.style.display = "none";
+      typeArea.hidden = false;
+      var input = $("typeInput");
+      input.value = "";
+      input.disabled = false;
+      input.classList.remove("shake");
+      $("typeSubmitBtn").disabled = false;
+      $("typeGiveUpBtn").disabled = false;
+      q.currentCorrectIdx = -1;
+      input.focus({ preventScroll: true });
+    } else {
+      optsHost.style.display = "";
+      typeArea.hidden = true;
+      var distractors = C.pickSmartDistractors(THROWS, t, 3, labelKey);
+      var options = C.shuffle([t].concat(distractors));
+      q.currentCorrectIdx = options.indexOf(t);
+      options.forEach(function (item, i) {
+        var b = document.createElement("button");
+        b.className = "option";
+        b.dataset.idx = i;
+        b.innerHTML =
+          '<span class="kbd" aria-hidden="true">' + (i + 1) + "</span>" +
+          '<span class="opt-label">' + esc(labelKey(item)) + "</span>";
+        b.addEventListener("click", function () { handleAnswer(i); });
+        optsHost.appendChild(b);
+      });
+    }
 
     var fb = $("feedback");
     fb.className = "feedback";
@@ -690,12 +760,46 @@
     $("nextBtn").disabled = true;
     q.answered = false;
 
-    // announce the new question to screen readers / move reading position
-    $("questionText").focus({ preventScroll: true });
+    // announce the new question / move reading position (type mode focuses its input)
+    if (!isType) $("questionText").focus({ preventScroll: true });
 
     // preload the next GIF so slow connections don't stall the next question
     var next = q.deck[q.qIndex + 1];
     if (next) { var pre = new Image(); pre.src = next.img; }
+  }
+
+  /* ── Hints ─────────────────────────────────────────────────
+     Level 1 shows the name shape ("O____ G___"); level 2 reveals
+     more letters, and in choice modes also greys out two wrong
+     options. Hints are free — they're recorded, not penalized.  */
+
+  function useHint() {
+    var q = state.quiz;
+    if (!q || q.answered || q.hintLevel >= 2) return;
+    q.hintLevel += 1;
+    var t = q.deck[q.qIndex];
+    var answerText = q.currentQMode === "name-to-english" ? t.english : t.name;
+    var line = $("hintLine");
+    line.hidden = false;
+    line.textContent = "💡 " + C.maskName(answerText, q.hintLevel);
+
+    if (q.hintLevel === 2 && q.currentQMode !== "type-answer") {
+      // eliminate two wrong options
+      var wrongs = Array.prototype.filter.call(
+        $("options").querySelectorAll(".option"),
+        function (b) { return parseInt(b.dataset.idx, 10) !== q.currentCorrectIdx && !b.classList.contains("eliminated"); }
+      );
+      C.shuffle(wrongs).slice(0, 2).forEach(function (b) {
+        b.classList.add("eliminated");
+        b.disabled = true;
+      });
+    }
+    if (q.hintLevel >= 2) $("hintBtn").disabled = true;
+    // clicking the hint button steals focus from the type input — give it back
+    if (q.currentQMode === "type-answer" && !q.answered) {
+      var ti = $("typeInput");
+      if (!ti.disabled) ti.focus();
+    }
   }
 
   function updateStreakPill(streak) {
@@ -708,7 +812,6 @@
   function handleAnswer(chosenIdx) {
     var q = state.quiz;
     if (!q || q.answered) return;
-    q.answered = true;
     var t = q.deck[q.qIndex];
     var correct = chosenIdx === q.currentCorrectIdx;
 
@@ -726,6 +829,36 @@
         b.setAttribute("aria-label", name + " — your answer, incorrect");
       }
     });
+
+    finalizeAnswer(t, correct, labelOf(buttons, chosenIdx));
+  }
+
+  function handleTypedAnswer(gaveUp) {
+    var q = state.quiz;
+    if (!q || q.answered) return;
+    var t = q.deck[q.qIndex];
+    var input = $("typeInput");
+    var typed = input.value.trim();
+    if (!gaveUp && !typed) {
+      input.classList.remove("shake");
+      void input.offsetWidth;
+      input.classList.add("shake");
+      return;
+    }
+    var correct = !gaveUp &&
+      C.matchAnswer(typed, t.name, ALL_NAMES.filter(function (n) { return n !== t.name; }), t.kanji);
+    input.disabled = true;
+    $("typeSubmitBtn").disabled = true;
+    $("typeGiveUpBtn").disabled = true;
+    input.blur();
+    finalizeAnswer(t, correct, gaveUp ? "(revealed)" : typed);
+  }
+
+  /* shared tail of both answer paths: scoring, SRS, feedback, focus */
+  function finalizeAnswer(t, correct, chosenText) {
+    var q = state.quiz;
+    q.answered = true;
+    $("hintBtn").disabled = true;
 
     if (correct) {
       q.score += 1;
@@ -745,8 +878,9 @@
       img: t.img,
       mode: q.currentQMode,
       correct: correct,
-      chosen: labelOf(buttons, chosenIdx),
-      correctAnswer: labelOf(buttons, q.currentCorrectIdx),
+      chosen: chosenText,
+      correctAnswer: q.currentLabelKey ? q.currentLabelKey(t) : t.name,
+      hints: q.hintLevel || 0,
       ts: Date.now()
     });
 
@@ -754,7 +888,8 @@
     updateSrs(t.name, correct);
 
     var fb = $("feedback");
-    var showThumb = q.currentQMode !== "image-to-name";
+    var isVisualish = q.currentQMode === "image-to-name" || q.currentQMode === "type-answer";
+    var showThumb = !isVisualish; // the big animation is already on screen in visual modes
     fb.className = "feedback show " + (correct ? "ok" : "no");
     fb.innerHTML =
       '<span class="feedback-inner">' +
@@ -763,8 +898,13 @@
       (correct
         ? "✔ Correct! <b>" + esc(t.name) + "</b> <span lang=\"ja\">" + esc(t.kanji) + "</span> — <i>" + esc(t.english) + "</i>"
         : "✖ The answer is <b>" + esc(t.name) + "</b> <span lang=\"ja\">" + esc(t.kanji) + "</span> — <i>" + esc(t.english) + "</i>") +
-      '<span class="fb-detail" style="display:block;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) + "</span>" +
-      "</span></span>";
+      '<span class="fb-detail" style="display:block;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) +
+      (q.hintLevel ? " · 💡 hint used" : "") + "</span>" +
+      "</span>" +
+      (speechUsable() ? '<button type="button" class="btn ghost icon-btn fb-speak" id="fbSpeakBtn" aria-label="Pronounce ' + esc(t.name) + '"><span aria-hidden="true">🔊</span></button>' : "") +
+      "</span>";
+    var sp = $("fbSpeakBtn");
+    if (sp) sp.addEventListener("click", function () { speakThrow(t); });
 
     // after answering, the alt text may reveal the throw
     $("throwImage").alt = "Animation of " + t.name;
@@ -772,6 +912,11 @@
     $("score").textContent = q.score;
     updateStreakPill(q.streak);
     setProgress((q.qIndex + 1) / q.deck.length);
+
+    // on small screens the feedback can sit below the fold
+    if (window.innerHeight < 800 || window.innerWidth < 700) {
+      fb.scrollIntoView({ block: "nearest", behavior: reducedMotion.matches ? "auto" : "smooth" });
+    }
 
     var nextBtn = $("nextBtn");
     nextBtn.disabled = false;
@@ -845,6 +990,7 @@
       var hist = getHistory();
       hist.unshift(entry);
       storage.set(KEY.history, hist.slice(0, 200));
+      recordActivity();
     }
     state.quiz = null;
     renderSummary(entry);
@@ -1005,6 +1151,7 @@
   }
 
   function refreshStudy(keepIndex) {
+    cancelPendingMark(); // filter/search changes supersede a pending sweep-advance
     var s = state.study;
     var current = keepIndex && s.deck.length ? s.deck[s.index] : null;
     var deck = computeStudyDeck();
@@ -1066,11 +1213,12 @@
     } else {
       frontInner = '<span class="front-word">' + esc(t.english) + "</span>";
     }
+    var touchy = window.matchMedia("(pointer: coarse)").matches;
     front.innerHTML =
       '<span class="belt-badge">' + beltBadgeHtml(t) + "</span>" +
       '<span class="card-count">' + count + "</span>" +
       frontInner +
-      '<span class="face-hint">tap / space to flip</span>';
+      '<span class="face-hint">' + (touchy ? "tap to flip · swipe for next" : "tap / space to flip") + "</span>";
 
     back.innerHTML =
       '<span class="belt-badge">' + beltBadgeHtml(t) + "</span>" +
@@ -1146,6 +1294,7 @@
   function studyNav(dir) {
     var s = state.study;
     if (!s.deck.length) return;
+    cancelPendingMark(); // user navigation supersedes a pending sweep-advance
     s.index = (s.index + dir + s.deck.length) % s.deck.length;
     s.flipped = false;
     resetFlipInstant();
@@ -1156,17 +1305,45 @@
     renderStudyCard();
   }
 
+  var markAnimHandle = null;
+
+  /* stop a pending sweep without advancing (for when the user
+     navigates themselves during the animation window) */
+  function cancelPendingMark() {
+    if (!markAnimHandle) return false;
+    clearTimeout(markAnimHandle);
+    markAnimHandle = null;
+    $("flashcard").classList.remove("mark-known", "mark-review");
+    return true;
+  }
+
+  /* a second mark during the sweep animation must not be dropped —
+     finish the pending advance instantly, then mark the next card */
+  function completePendingMark() {
+    if (cancelPendingMark()) studyNav(1);
+  }
+
   function markCard(flag) {
     var s = state.study;
     if (!s.deck.length) return;
+    completePendingMark();
     var t = s.deck[s.index];
     var entry = updateSrs(t.name, flag === "known", flag);
+    recordActivity();
     var days = C.LEITNER_INTERVALS_DAYS[entry.box - 1];
     toast(flag === "known"
       ? t.name + " → box " + entry.box + " · next review in " + (days === 0 ? "today" : days + "d")
       : t.name + " marked for review");
-    if (state.view === "home") renderLifetimeStats();
-    studyNav(1);
+    // the card sweeps out toward the verdict before the next one arrives
+    var card = $("flashcard");
+    var cls = flag === "known" ? "mark-known" : "mark-review";
+    if (reducedMotion.matches) { studyNav(1); return; }
+    card.classList.add(cls);
+    markAnimHandle = setTimeout(function () {
+      markAnimHandle = null;
+      card.classList.remove(cls);
+      studyNav(1);
+    }, 280);
   }
 
   /* ═══════════ Library ═══════════ */
@@ -1210,9 +1387,15 @@
         tile.addEventListener("click", function () { openThrowDetail(t.name); });
         grid.appendChild(tile);
       });
+      var beltThrows = THROWS.filter(function (t) { return t.belt === belt; });
+      var mastered = C.masteredCount(stats, beltThrows);
+      var pctMastered = beltThrows.length ? Math.round((mastered / beltThrows.length) * 100) : 0;
       section.innerHTML =
         '<h2 class="library-group-title"><span class="dot" data-belt="' + belt + '" aria-hidden="true" style="width:12px;height:12px;border-radius:50%;"></span>' +
-        esc(meta.label) + ' <span class="sub">' + esc(meta.sub) + " · " + items.length + " throws</span></h2>";
+        esc(meta.label) + ' <span class="sub">' + esc(meta.sub) + " · " + items.length + " throws</span>" +
+        '<span class="mastery-wrap" title="' + mastered + " of " + beltThrows.length + ' mastered">' +
+        '<span class="mastery-bar" aria-hidden="true"><span style="width:' + pctMastered + '%"></span></span>' +
+        '<span class="sub">' + mastered + "/" + beltThrows.length + "</span></span></h2>";
       section.appendChild(grid);
       host.appendChild(section);
     });
@@ -1238,7 +1421,9 @@
       '<div class="detail-hero"><span class="belt-badge">' + beltBadgeHtml(t) + "</span>" +
       '<img src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" /></div>' +
       '<div class="detail-names">' +
-      '<div class="d-name">' + esc(t.name) + "</div>" +
+      '<div class="d-name">' + esc(t.name) +
+      (speechUsable() ? ' <button type="button" class="btn ghost icon-btn" id="detailSpeakBtn" aria-label="Pronounce ' + esc(t.name) + '"><span aria-hidden="true">🔊</span></button>' : "") +
+      "</div>" +
       '<div class="d-kanji" lang="ja">' + esc(t.kanji) + "</div>" +
       '<div class="d-english">' + esc(t.english) + "</div>" +
       '<div class="muted small" style="margin-top:6px;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) + "</div>" +
@@ -1250,6 +1435,8 @@
       "</div>"
     ));
     attachImgRetry(document.querySelector(".detail-hero img"));
+    var dsp = $("detailSpeakBtn");
+    if (dsp) dsp.addEventListener("click", function () { speakThrow(t); });
   }
 
   /* ═══════════ History modal ═══════════ */
@@ -1327,7 +1514,8 @@
         "<span><span class=\"qa-name\">" + esc(r.name) +
         ' <span class="muted small">· ' + esc(r.english || "") + "</span></span>" +
         '<span class="qa-sub" style="display:block;">' +
-        (r.correct ? "correct" : "you said “" + esc(r.chosen || "") + "”") + "</span></span>" +
+        (r.correct ? "correct" : "you said “" + esc(r.chosen || "") + "”") +
+        (r.hints ? " · 💡×" + r.hints : "") + "</span></span>" +
         '<span class="qa-pill">' + esc((MODES[r.mode] || {}).label || r.mode || "") + "</span>";
       qaList.appendChild(row);
     });
@@ -1359,6 +1547,7 @@
       history: getHistory(),
       throws: getThrowStats(),
       srs: getSrs(),
+      activity: getActivity(),
       prefs: storage.get(KEY.prefs, {})
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1387,6 +1576,7 @@
       storage.set(KEY.history, hist);
       storage.set(KEY.throws, ts);
       storage.set(KEY.srs, srs);
+      storage.set(KEY.activity, C.sanitizeActivity(data.activity));
       closeModal();
       showView("home");
       toast("Imported " + hist.length + " tests");
@@ -1401,9 +1591,11 @@
     var rows = [
       ["Anywhere", ""],
       ["?", "Show this help"],
+      ["T", "Toggle dark / light theme"],
       ["Esc", "Close dialog"],
       ["Quiz", ""],
       ["1–4", "Pick an answer"],
+      ["H", "Get a hint (twice for 50/50)"],
       ["Enter / Space", "Next question"],
       ["Study", ""],
       ["← →", "Previous / next card"],
@@ -1447,7 +1639,20 @@
     var tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "select" || tag === "textarea") return;
 
+    // during a Type-It question, printable keys belong to the answer — route
+    // them to the input instead of firing single-letter shortcuts (T/H/?)
+    var tq = state.quiz;
+    if (state.view === "quiz" && tq && tq.currentQMode === "type-answer" && e.key.length === 1 && e.key !== " ") {
+      if (!tq.answered) {
+        var ti = $("typeInput");
+        if (!ti.disabled && document.activeElement !== ti) ti.focus();
+        return; // the keystroke lands in the freshly-focused input
+      }
+      return; // answered: swallow stray typing during the auto-advance window
+    }
+
     if (e.key === "?") { e.preventDefault(); openHelp(); return; }
+    if (e.key === "t" || e.key === "T") { toggleTheme(); return; }
 
     if (state.view === "quiz") {
       if (["1", "2", "3", "4"].indexOf(e.key) !== -1) {
@@ -1456,6 +1661,7 @@
         if (btns[i] && !btns[i].disabled) btns[i].click();
         return;
       }
+      if (e.key === "h" || e.key === "H") { useHint(); return; }
       if (e.key === "Enter" || e.key === " ") {
         var nb = $("nextBtn");
         // don't steal Enter/Space from another focused control (End now, Home…)
@@ -1487,6 +1693,7 @@
   }
 
   function shuffleStudy() {
+    cancelPendingMark();
     var s = state.study;
     s.shuffled = true;
     // record a stable order over ALL throws so later filter changes keep it
@@ -1551,6 +1758,15 @@
     $("homeBtn").addEventListener("click", function () { requestView("home"); });
     $("nextBtn").addEventListener("click", nextQuestion);
     $("quitBtn").addEventListener("click", endNow);
+    $("hintBtn").addEventListener("click", useHint);
+    $("typeSubmitBtn").addEventListener("click", function () { handleTypedAnswer(false); });
+    $("typeGiveUpBtn").addEventListener("click", function () { handleTypedAnswer(true); });
+    $("typeInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); handleTypedAnswer(false); }
+    });
+    $("typeInput").addEventListener("input", function () {
+      this.classList.remove("shake"); // typing clears the empty-submit warning
+    });
     $("autoNextChk").addEventListener("change", function (e) {
       state.autoNext = e.target.checked;
       savePrefs();
@@ -1568,6 +1784,20 @@
     $("shuffleBtn").addEventListener("click", shuffleStudy);
     $("knowBtn").addEventListener("click", function () { markCard("known"); });
     $("reviewBtn").addEventListener("click", function () { markCard("review"); });
+    if (speechOK) {
+      $("speakBtn").addEventListener("click", function () {
+        var s = state.study;
+        if (s.deck.length) speakThrow(s.deck[s.index]);
+      });
+      var refreshSpeech = function () {
+        pickJaVoice();
+        $("speakBtn").hidden = !speechUsable();
+      };
+      refreshSpeech();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = refreshSpeech;
+      }
+    }
     $("studySearch").addEventListener("input", function (e) {
       state.study.query = e.target.value;
       refreshStudy();

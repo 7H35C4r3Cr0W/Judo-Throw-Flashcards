@@ -288,6 +288,112 @@
     };
   }
 
+  /* ── Typed-answer matching ─────────────────────────────────
+     "o soto gari", "Osotogari", "ōsoto-gari" and one-letter typos
+     should all count. Normalize hard, then allow a small edit
+     distance that scales with the length of the answer.         */
+
+  function normalizeAnswer(s) {
+    return String(s)
+      .toLowerCase()
+      .replace(/ō/g, "o").replace(/ū/g, "u").replace(/ā/g, "a")
+      .replace(/ē/g, "e").replace(/ī/g, "i")
+      .replace(/[^a-z]/g, ""); // drop spaces, hyphens, apostrophes, digits
+  }
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    var m = a.length, n = b.length;
+    if (!m) return n;
+    if (!n) return m;
+    var prev = new Array(n + 1), cur = new Array(n + 1);
+    for (var j = 0; j <= n; j++) prev[j] = j;
+    for (var i = 1; i <= m; i++) {
+      cur[0] = i;
+      for (var k = 1; k <= n; k++) {
+        var cost = a[i - 1] === b[k - 1] ? 0 : 1;
+        cur[k] = Math.min(prev[k] + 1, cur[k - 1] + 1, prev[k - 1] + cost);
+      }
+      var tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[n];
+  }
+
+  /* Typo tolerance must never turn one throw into another —
+     Kosoto Gari is a single edit from Osoto Gari. The input is
+     accepted only when it is within tolerance of the correct name
+     AND strictly closer to it than to any alternative name.
+     Typing the kanji itself (e.g. via a Japanese IME) also counts. */
+  function matchAnswer(input, correct, alternatives, kanji) {
+    if (kanji) {
+      var typed = String(input).normalize ? String(input).normalize("NFKC") : String(input);
+      if (typed.replace(/\s+/g, "") === kanji) return true;
+    }
+    var a = normalizeAnswer(input);
+    var b = normalizeAnswer(correct);
+    if (!a) return false;
+    var tolerance = b.length >= 10 ? 2 : b.length >= 5 ? 1 : 0;
+    var d = levenshtein(a, b);
+    if (d > tolerance) return false;
+    if (alternatives) {
+      for (var i = 0; i < alternatives.length; i++) {
+        if (levenshtein(a, normalizeAnswer(alternatives[i])) <= d) return false;
+      }
+    }
+    return true;
+  }
+
+  /* ── Hints ─────────────────────────────────────────────────
+     Level 1 masks the name ("O____ G___"); level 2 reveals every
+     other letter ("O_o_o G_r_"). Word shape + initials first, more
+     letters if still stuck.                                     */
+
+  function maskName(name, level) {
+    return name.split(" ").map(function (word) {
+      return word.split("").map(function (ch, i) {
+        if (!/[a-zA-Z]/.test(ch)) return ch; // hyphens etc. stay visible
+        if (i === 0) return ch;
+        if (level >= 2 && i % 2 === 0) return ch;
+        return "_";
+      }).join("");
+    }).join(" ");
+  }
+
+  /* ── Day streak ────────────────────────────────────────────
+     activity = { "2026-07-17": count, ... }. The streak counts
+     consecutive days ending today (or yesterday, so an unbroken
+     streak isn't shown as 0 before today's first session).      */
+
+  function ymd(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function computeDayStreak(activity, now) {
+    // walk by calendar day, not fixed 24h steps — DST days are 23/25h
+    var d = new Date(now);
+    var streak = 0;
+    if (!activity[ymd(d.getTime())]) d.setDate(d.getDate() - 1); // today not studied yet
+    while (activity[ymd(d.getTime())]) {
+      streak += 1;
+      d.setDate(d.getDate() - 1);
+    }
+    return streak;
+  }
+
+  function sanitizeActivity(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    var out = {};
+    Object.keys(raw).forEach(function (k) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(k) && Number.isFinite(raw[k]) && raw[k] > 0) {
+        out[k] = Math.floor(raw[k]);
+      }
+    });
+    return out;
+  }
+
   /* ── Study-deck filtering ────────────────────────────────── */
 
   function filterThrows(throws, opts) {
@@ -326,7 +432,14 @@
     sanitizeThrowStats: sanitizeThrowStats,
     sanitizeSrs: sanitizeSrs,
     sanitizePrefs: sanitizePrefs,
-    filterThrows: filterThrows
+    filterThrows: filterThrows,
+    normalizeAnswer: normalizeAnswer,
+    levenshtein: levenshtein,
+    matchAnswer: matchAnswer,
+    maskName: maskName,
+    ymd: ymd,
+    computeDayStreak: computeDayStreak,
+    sanitizeActivity: sanitizeActivity
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = CORE;

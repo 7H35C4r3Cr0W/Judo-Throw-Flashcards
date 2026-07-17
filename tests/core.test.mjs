@@ -355,6 +355,94 @@ test("sanitizePrefs: whitelists everything", () => {
   assert.deepEqual(good.belts, BELT_ORDER);
 });
 
+/* ── Typed-answer matching ──────────────────────────────────── */
+
+test("normalizeAnswer strips case, spacing, punctuation, macrons", () => {
+  assert.equal(C.normalizeAnswer("Ō-soto Gari!"), "osotogari");
+  assert.equal(C.normalizeAnswer("  seoi   nage "), "seoinage");
+  assert.equal(C.normalizeAnswer("123"), "");
+});
+
+test("levenshtein distances", () => {
+  assert.equal(C.levenshtein("", ""), 0);
+  assert.equal(C.levenshtein("abc", "abc"), 0);
+  assert.equal(C.levenshtein("abc", "abd"), 1);
+  assert.equal(C.levenshtein("abc", ""), 3);
+  assert.equal(C.levenshtein("kitten", "sitting"), 3);
+});
+
+test("matchAnswer: forgiving but not sloppy", () => {
+  const others = (name) => THROWS.map((t) => t.name).filter((n) => n !== name);
+  assert.ok(C.matchAnswer("osoto gari", "Osoto Gari", others("Osoto Gari")));
+  assert.ok(C.matchAnswer("O-Soto-Gari", "Osoto Gari", others("Osoto Gari")));
+  assert.ok(C.matchAnswer("osoto gsri", "Osoto Gari", others("Osoto Gari")));      // 1 typo
+  assert.ok(C.matchAnswer("harai tsurikomi ashi", "Harai Tsurikomi Ashi", others("Harai Tsurikomi Ashi")));
+  assert.ok(C.matchAnswer("harai tsurikomi ashee", "Harai Tsurikomi Ashi", others("Harai Tsurikomi Ashi"))); // 2 edits, long name
+  assert.ok(!C.matchAnswer("", "Osoto Gari", others("Osoto Gari")));
+  assert.ok(!C.matchAnswer("kosoto gari", "Osoto Gari", others("Osoto Gari")));    // a DIFFERENT throw must never match
+  assert.ok(!C.matchAnswer("uchi mata", "Osoto Gari", others("Osoto Gari")));
+  assert.ok(!C.matchAnswer("o goshi", "O Guruma", others("O Guruma")));            // short names: no tolerance
+});
+
+test("matchAnswer: every throw matches itself and no other throw", () => {
+  const names = THROWS.map((t) => t.name);
+  for (const t of THROWS) {
+    const others = names.filter((n) => n !== t.name);
+    assert.ok(C.matchAnswer(t.name, t.name, others), t.name);
+    for (const u of THROWS) {
+      if (u.name === t.name) continue;
+      assert.ok(!C.matchAnswer(u.name, t.name, names.filter((n) => n !== t.name)),
+        `${u.name} wrongly matches ${t.name}`);
+    }
+  }
+});
+
+/* ── Hints ──────────────────────────────────────────────────── */
+
+test("maskName levels", () => {
+  assert.equal(C.maskName("Osoto Gari", 1), "O____ G___");
+  assert.equal(C.maskName("Osoto Gari", 2), "O_o_o G_r_");
+  assert.equal(C.maskName("O Goshi", 1), "O G____");
+  // punctuation stays visible so hyphenated meanings keep their shape
+  assert.equal(C.maskName("Lift-Pull Hip", 1), "L___-____ H__");
+});
+
+test("matchAnswer: exact kanji is accepted, other throws' kanji is not", () => {
+  const osoto = THROWS.find((t) => t.name === "Osoto Gari");
+  const others = THROWS.map((t) => t.name).filter((n) => n !== osoto.name);
+  assert.ok(C.matchAnswer("大外刈", "Osoto Gari", others, osoto.kanji));
+  assert.ok(C.matchAnswer(" 大外刈 ", "Osoto Gari", others, osoto.kanji)); // whitespace tolerated
+  assert.ok(!C.matchAnswer("小外刈", "Osoto Gari", others, osoto.kanji)); // Kosoto Gari's kanji
+  assert.ok(C.matchAnswer("osoto gari", "Osoto Gari", others, osoto.kanji)); // romaji still fine
+});
+
+/* ── Day streak ─────────────────────────────────────────────── */
+
+test("computeDayStreak counts consecutive days, tolerates today unplayed", () => {
+  const now = new Date("2026-07-17T12:00:00").getTime();
+  const day = 86400000;
+  const act = {};
+  assert.equal(C.computeDayStreak(act, now), 0);
+  act[C.ymd(now)] = 1;
+  assert.equal(C.computeDayStreak(act, now), 1);
+  act[C.ymd(now - day)] = 2;
+  act[C.ymd(now - 2 * day)] = 1;
+  assert.equal(C.computeDayStreak(act, now), 3);
+  // gap breaks the streak
+  act[C.ymd(now - 4 * day)] = 1;
+  assert.equal(C.computeDayStreak(act, now), 3);
+  // today not yet studied → streak from yesterday still counts
+  delete act[C.ymd(now)];
+  assert.equal(C.computeDayStreak(act, now), 2);
+});
+
+test("sanitizeActivity keeps only valid ymd keys with positive counts", () => {
+  const out = C.sanitizeActivity({ "2026-07-17": 3, "junk": 5, "2026-07-16": -1, "2026-07-15": 2.9 });
+  assert.deepEqual(out, { "2026-07-17": 3, "2026-07-15": 2 });
+  assert.deepEqual(C.sanitizeActivity(null), {});
+  assert.deepEqual(C.sanitizeActivity([1]), {});
+});
+
 /* ── Filtering ──────────────────────────────────────────────── */
 
 test("filterThrows: query matches name, english, kanji, and group", () => {

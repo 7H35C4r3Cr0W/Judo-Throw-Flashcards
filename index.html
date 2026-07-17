@@ -177,6 +177,7 @@
       <div class="study-mark-row">
         <button class="btn know" id="knowBtn">✓ I know this</button>
         <button class="btn review" id="reviewBtn">↻ Needs review</button>
+        <button class="btn ghost" id="speakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         <span class="pill" id="studyCounts" aria-live="polite"></span>
       </div>
     </div>
@@ -229,12 +230,21 @@
             <span class="hint" id="questionHint"></span>
           </h2>
           <div class="options" id="options"></div>
+          <div class="type-area" id="typeArea" hidden>
+            <input type="text" id="typeInput" autocomplete="off" autocapitalize="off"
+              autocorrect="off" spellcheck="false" enterkeyhint="go"
+              placeholder="Type the Japanese name…" aria-label="Type the Japanese name" />
+            <button class="btn primary" id="typeSubmitBtn">Check</button>
+            <button class="btn ghost" id="typeGiveUpBtn">Show answer</button>
+          </div>
+          <p class="hint-line" id="hintLine" hidden aria-live="polite"></p>
           <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
           <div class="controls">
             <label class="left" for="autoNextChk" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
               <input type="checkbox" id="autoNextChk" /> Auto-advance when correct
             </label>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn ghost" id="hintBtn"><span aria-hidden="true">💡</span> Hint</button>
               <button class="btn ghost" id="quitBtn">End now</button>
               <button class="btn primary" id="nextBtn" disabled>Next →</button>
             </div>
@@ -270,6 +280,8 @@
     </main>
 
     <footer class="site-footer">
+      <p class="made-by">Made by <strong>Andre Boyle</strong> — inquiries &amp; suggestions welcome at
+        <a href="mailto:its.lagus@proton.me">its.lagus@proton.me</a></p><br />
       <span lang="ja">精力善用 · 自他共栄</span><br />
       Data &amp; animations from
       <a href="https://judo-caja.com/techniques.html" target="_blank" rel="noopener">judo-caja.com</a>
