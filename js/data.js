@@ -82,10 +82,11 @@
   };
 
   var MODES = {
-    "image-to-name":   { icon: "🎬", title: "Visual",      desc: "Watch the animation, name the throw",      label: "🎬 Visual" },
-    "english-to-name": { icon: "📖", title: "EN → JP",     desc: "English meaning to Japanese name",          label: "📖 EN→JP" },
-    "name-to-english": { icon: "🈶", title: "JP → EN",     desc: "Japanese name to English meaning",          label: "🈶 JP→EN" },
-    "smart":           { icon: "🧠", title: "Smart Drill", desc: "Mixed questions, weakest throws first",     label: "🧠 Smart" }
+    "image-to-name":   { icon: "🎬", title: "Visual",      desc: "Watch the animation, name the throw",       label: "🎬 Visual" },
+    "english-to-name": { icon: "📖", title: "EN → JP",     desc: "English meaning to Japanese name",           label: "📖 EN→JP" },
+    "name-to-english": { icon: "🈶", title: "JP → EN",     desc: "Japanese name to English meaning",           label: "🈶 JP→EN" },
+    "type-answer":     { icon: "⌨️", title: "Type It",     desc: "Watch the animation, type the name — no options", label: "⌨️ Type" },
+    "smart":           { icon: "🧠", title: "Smart Drill", desc: "Mixed questions, weakest throws first",      label: "🧠 Smart" }
   };
 
   var DATA = { THROWS: THROWS, BELT_ORDER: BELT_ORDER, BELT_META: BELT_META, MODES: MODES };
