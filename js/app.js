@@ -247,6 +247,8 @@
   function abandonQuiz() {
     stopTimer();
     clearTimeout(autoNextHandle);
+    quizImgToken += 1; // cancel pending image retries/watchdogs
+    clearQuizImgTimers();
     state.quiz = null;
   }
 
@@ -488,10 +490,8 @@
     wrap.appendChild(box);
     $("replayBtn").addEventListener("click", function () {
       var img = $("throwImage");
-      var src = img.src;
       unpauseGif();
-      img.src = "";
-      img.src = src;
+      img.src = img.src; // same-value assignment restarts the GIF
     });
     $("pauseBtn").addEventListener("click", function () {
       if (gifPaused) unpauseGif(); else pauseGif();
@@ -538,6 +538,92 @@
       esc(BELT_META[t.belt].label);
   }
 
+  /* ── Image resilience ──────────────────────────────────────────
+     Mobile connections drop GIF fetches; a study card or quiz image
+     must recover instead of dead-ending. Failed loads retry with
+     backoff, a watchdog catches hung connections, and only after
+     that do we show an error (with a manual retry).              */
+
+  var IMG_RETRY_DELAYS = [700, 2200];
+  var quizImgToken = 0; // invalidates pending retries/watchdogs on question change
+  var quizImgTimers = [];
+
+  function clearQuizImgTimers() {
+    quizImgTimers.forEach(clearTimeout);
+    quizImgTimers = [];
+  }
+
+  function loadQuizImage(src) {
+    var token = ++quizImgToken;
+    clearQuizImgTimers();
+    var imageWrap = $("imageWrap");
+    var img = $("throwImage");
+    var attempt = 0;
+
+    function fail() {
+      if (token !== quizImgToken) return;
+      imageWrap.classList.remove("loading");
+      imageWrap.classList.add("error");
+    }
+
+    function tryLoad() {
+      if (token !== quizImgToken) return;
+      imageWrap.classList.remove("error");
+      imageWrap.classList.add("loading");
+      // hung connections never fire onerror — watch and retry
+      quizImgTimers.push(setTimeout(function () {
+        if (token === quizImgToken && imageWrap.classList.contains("loading")) retry();
+      }, 12000));
+      img.src = src; // same-value assignment re-runs the fetch per spec
+    }
+
+    function retry() {
+      if (token !== quizImgToken) return;
+      if (attempt >= IMG_RETRY_DELAYS.length) { fail(); return; }
+      var delay = IMG_RETRY_DELAYS[attempt];
+      attempt += 1;
+      quizImgTimers.push(setTimeout(tryLoad, delay));
+    }
+
+    img.onload = function () {
+      if (token !== quizImgToken) return;
+      clearQuizImgTimers();
+      imageWrap.classList.remove("loading");
+      if (reducedMotion.matches) pauseGif(); // WCAG: no autoplaying motion
+    };
+    img.onerror = function () {
+      if (!img.getAttribute("src")) return; // ignore programmatic src clears
+      retry();
+    };
+    tryLoad();
+
+    // manual retry from the error state resets the backoff budget
+    var retryBtn = $("imgRetryBtn");
+    if (retryBtn) retryBtn.onclick = function () { attempt = 0; tryLoad(); };
+  }
+
+  /* Retry-once-then-placeholder for images outside the quiz flow
+     (study card faces, throw-detail modal). */
+  function attachImgRetry(img) {
+    if (!img) return;
+    var retried = false;
+    img.addEventListener("error", function handler() {
+      if (!img.getAttribute("src")) return;
+      if (!retried) {
+        retried = true;
+        var src = img.getAttribute("src");
+        setTimeout(function () {
+          if (img.isConnected) img.src = src;
+        }, 900);
+        return;
+      }
+      var fallback = document.createElement("span");
+      fallback.className = "img-fallback";
+      fallback.textContent = "Animation couldn't load — check your connection";
+      if (img.parentNode) img.parentNode.replaceChild(fallback, img);
+    });
+  }
+
   function renderQuestion() {
     var q = state.quiz;
     var t = q.deck[q.qIndex];
@@ -566,17 +652,7 @@
       qMain.textContent = "What throw is this?";
       hint.textContent = "Pick the correct Japanese name";
       imageWrap.style.display = "grid";
-      imageWrap.classList.remove("error");
-      imageWrap.classList.add("loading");
-      img.onload = function () {
-        imageWrap.classList.remove("loading");
-        if (reducedMotion.matches) pauseGif(); // WCAG: no autoplaying motion
-      };
-      img.onerror = function () {
-        imageWrap.classList.remove("loading");
-        imageWrap.classList.add("error");
-      };
-      img.src = t.img;
+      loadQuizImage(t.img);
       labelKey = function (x) { return x.name; };
     } else if (q.currentQMode === "english-to-name") {
       qMain.textContent = 'Which throw means "' + t.english + '"?';
@@ -682,7 +758,7 @@
     fb.className = "feedback show " + (correct ? "ok" : "no");
     fb.innerHTML =
       '<span class="feedback-inner">' +
-      (showThumb ? '<img class="fb-thumb" src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" />' : "") +
+      (showThumb ? '<img class="fb-thumb" src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" onerror="this.style.display=\'none\'" />' : "") +
       "<span>" +
       (correct
         ? "✔ Correct! <b>" + esc(t.name) + "</b> <span lang=\"ja\">" + esc(t.kanji) + "</span> — <i>" + esc(t.english) + "</i>"
@@ -748,6 +824,8 @@
     if (!q) return;
     stopTimer();
     clearTimeout(autoNextHandle);
+    quizImgToken += 1; // cancel pending image retries/watchdogs
+    clearQuizImgTimers();
     var completedAt = Date.now();
     var totalAnswered = q.results.length;
 
@@ -1007,6 +1085,9 @@
     card.classList.toggle("flipped", s.flipped);
     card.setAttribute("aria-label", cardLabel(t, s, count));
 
+    attachImgRetry(front.querySelector("img.throw-gif"));
+    attachImgRetry(back.querySelector("img.throw-gif"));
+
     var srs = getSrs()[t.name];
     $("knowBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "known")));
     $("reviewBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "review")));
@@ -1168,6 +1249,7 @@
       '<div class="metric"><span>Spaced Repetition</span><b>' + esc(srsTxt) + "</b></div>" +
       "</div>"
     ));
+    attachImgRetry(document.querySelector(".detail-hero img"));
   }
 
   /* ═══════════ History modal ═══════════ */

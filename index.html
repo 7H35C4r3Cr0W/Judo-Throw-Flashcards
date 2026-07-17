@@ -214,7 +214,13 @@
         <div class="image-wrap" id="imageWrap">
           <span class="belt-badge" id="beltBadge"></span>
           <div class="img-loading"><div><div class="spinner" aria-hidden="true"></div>Loading animation…</div></div>
-          <div class="img-error">The animation could not be loaded.<br /><span class="muted small">Check that the images folder is intact.</span></div>
+          <div class="img-error">
+            <div>
+              The animation could not be loaded.
+              <span class="muted small" style="display:block;margin:4px 0 10px;">Check your connection and try again.</span>
+              <button type="button" class="btn small" id="imgRetryBtn">↻ Try again</button>
+            </div>
+          </div>
           <img id="throwImage" alt="Animated demonstration of a judo throw — identify it from the answer options" />
         </div>
         <div class="q-body">

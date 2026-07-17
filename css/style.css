@@ -1384,3 +1384,19 @@ button.focus-row:hover, button.wrong-row:hover {
   }
   .throw-tile .t-english, .muted { color: #444 !important; }
 }
+
+/* ═══════════ Image fallback ═══════════ */
+
+.img-fallback {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  background: var(--panel-2);
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+  max-width: 100%;
+}
