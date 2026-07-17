@@ -1285,11 +1285,14 @@ kbd, .kbd {
 
 /* ═══════════ Touch ergonomics ═══════════ */
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (hover: none) {
+  .btn { min-height: 44px; }
   .chip { min-height: 44px; padding: 10px 14px; }
   .btn.small { min-height: 44px; }
   .btn.icon-btn { min-width: 44px; min-height: 44px; }
   .chip-row { gap: 8px; }
+  .nav-tab { min-height: 44px; }
+  .option { min-height: 56px; }
 }
 
 /* ═══════════ Late additions ═══════════ */
