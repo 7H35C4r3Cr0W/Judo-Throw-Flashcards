@@ -3,592 +3,78 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-<title>Judo Throws Flashcard Quiz</title>
-<style>
-  :root {
-    --bg: #0b0d12;
-    --bg-2: #0f1218;
-    --panel: #161a22;
-    --panel-2: #1c2029;
-    --panel-3: #232834;
-    --text: #e8eaed;
-    --muted: #9aa3b2;
-    --muted-2: #6b7280;
-    --border: #262c38;
-    --border-2: #2f3543;
-    --accent: #e63946;
-    --accent-2: #c1121f;
-    --accent-soft: rgba(230, 57, 70, 0.12);
-    --success: #22c55e;
-    --success-soft: rgba(34, 197, 94, 0.12);
-    --warning: #f59e0b;
-    --warning-soft: rgba(245, 158, 11, 0.14);
-    --danger: #ef4444;
-    --danger-soft: rgba(239, 68, 68, 0.12);
-    --yellow: #f1c40f;
-    --orange: #e67e22;
-    --green: #27ae60;
-    --blue: #3498db;
-    --brown: #8b5a2b;
-    --gray: #7f8c8d;
-    --shadow-lg: 0 20px 60px rgba(0,0,0,0.45);
-    --shadow-md: 0 8px 24px rgba(0,0,0,0.30);
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0; padding: 0;
-    background:
-      radial-gradient(1200px 600px at 90% -20%, #1a1f2b 0%, transparent 60%),
-      radial-gradient(900px 500px at -10% 30%, #1e1726 0%, transparent 55%),
-      var(--bg) fixed;
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .app {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 22px 20px 60px;
-  }
-
-  /* ───── Header ───── */
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark {
-    width: 42px; height: 42px; border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: grid; place-items: center;
-    font-weight: 900; color: white; font-size: 22px;
-    box-shadow: 0 6px 20px rgba(230, 57, 70, 0.35);
-  }
-  h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
-  .subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .header-actions { display: flex; gap: 8px; }
-
-  /* ───── Buttons ───── */
-  .btn {
-    appearance: none; cursor: pointer;
-    border: 1px solid var(--border); background: var(--panel-2);
-    color: var(--text);
-    border-radius: 10px; padding: 10px 14px;
-    font-size: 14px; font-weight: 600;
-    transition: all 0.15s ease;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .btn:hover { border-color: var(--border-2); transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .btn.primary {
-    background: linear-gradient(180deg, var(--accent), var(--accent-2));
-    border-color: transparent; color: white;
-    box-shadow: 0 6px 18px rgba(230, 57, 70, 0.3);
-  }
-  .btn.primary:hover { filter: brightness(1.08); }
-  .btn.ghost { background: transparent; }
-  .btn.danger { color: #ffd4d4; border-color: rgba(239,68,68,0.5); }
-  .btn.danger:hover { background: var(--danger-soft); }
-  .btn.small { padding: 6px 10px; font-size: 12px; }
-  .btn.icon-btn { padding: 8px 10px; }
-
-  /* ───── Card / Panel ───── */
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: var(--shadow-md);
-  }
-  .panel { padding: 16px 18px; }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; gap: 10px;
-  }
-  .panel-header h3 { margin: 0; font-size: 15px; letter-spacing: 0.3px; }
-  .muted { color: var(--muted); }
-  .small { font-size: 12px; }
-
-  /* ───── Hero (Kano) ───── */
-  .hero {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 22px;
-    padding: 22px;
-    overflow: hidden;
-    position: relative;
-    margin-bottom: 18px;
-    background:
-      radial-gradient(600px 300px at 100% 0%, rgba(230,57,70,0.10) 0%, transparent 60%),
-      var(--panel);
-  }
-  .hero-photo {
-    width: 220px; height: 260px; border-radius: 14px;
-    overflow: hidden; position: relative;
-    background: #0a0c10; border: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
-    flex-shrink: 0;
-  }
-  .hero-photo img {
-    width: 100%; height: 100%; object-fit: cover;
-    filter: contrast(1.05) saturate(0.9);
-    display: block;
-  }
-  .hero-photo::after {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.45) 100%);
-    pointer-events: none;
-  }
-  .hero-text { display: flex; flex-direction: column; justify-content: center; }
-  .hero-eyebrow {
-    color: var(--accent); font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
-  }
-  .hero-name { font-size: 30px; font-weight: 800; letter-spacing: 0.3px; margin: 0; }
-  .hero-name-jp { color: var(--muted); font-weight: 500; font-size: 18px; margin-left: 8px; }
-  .hero-dates { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .hero blockquote {
-    margin: 14px 0 0 0; padding: 12px 16px;
-    border-left: 3px solid var(--accent);
-    background: rgba(255,255,255,0.02);
-    border-radius: 0 10px 10px 0;
-    font-size: 14px; line-height: 1.55; color: #d8dce4;
-    font-style: italic;
-  }
-  .hero blockquote cite { display: block; margin-top: 6px; font-style: normal; color: var(--muted); font-size: 12px; }
-  .hero-tags { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-  .hero-tag {
-    font-size: 11px; padding: 4px 9px; border-radius: 999px;
-    background: var(--panel-3); border: 1px solid var(--border-2); color: var(--muted);
-  }
-
-  /* ───── Lifetime stats grid ───── */
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 10px; margin-bottom: 18px;
-  }
-  .stat-card {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 14px 14px;
-  }
-  .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { font-size: 24px; font-weight: 800; margin-top: 4px; }
-  .stat-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
-
-  /* ───── Setup panel ───── */
-  .setup-panel {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 16px; padding: 18px; margin-bottom: 18px;
-  }
-  .setup-row {
-    display: grid; gap: 18px 22px;
-    grid-template-columns: 1fr 1fr;
-  }
-  .setup-title {
-    font-size: 11px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: 1.4px; margin-bottom: 8px;
-  }
-  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 999px;
-    padding: 6px 11px; font-size: 12px;
-    cursor: pointer; user-select: none; transition: all 0.15s ease;
-  }
-  .chip:hover { border-color: var(--border-2); }
-  .chip.active { background: var(--accent-soft); border-color: var(--accent); color: #ffd8dc; }
-  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .chip[data-belt="Yellow"] .dot { background: var(--yellow); }
-  .chip[data-belt="Orange"] .dot { background: var(--orange); }
-  .chip[data-belt="Green"]  .dot { background: var(--green); }
-  .chip[data-belt="Blue"]   .dot { background: var(--blue); }
-  .chip[data-belt="Brown"]  .dot { background: var(--brown); }
-  .chip[data-belt="Preserved"] .dot { background: var(--gray); }
-
-  .mode-grid {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .mode-card {
-    appearance: none; cursor: pointer;
-    background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 12px;
-    padding: 14px 12px; text-align: left;
-    display: flex; flex-direction: column; gap: 4px;
-    transition: all 0.15s ease;
-  }
-  .mode-card:hover { border-color: var(--border-2); transform: translateY(-1px); }
-  .mode-card.active {
-    background: var(--accent-soft); border-color: var(--accent);
-    box-shadow: 0 6px 18px rgba(230, 57, 70, 0.18);
-  }
-  .mode-icon { font-size: 22px; line-height: 1; }
-  .mode-title { font-size: 14px; font-weight: 700; }
-  .mode-desc { font-size: 12px; color: var(--muted); }
-
-  .setup-actions {
-    grid-column: 1 / -1;
-    display: flex; gap: 8px; flex-wrap: wrap;
-    align-items: center;
-    border-top: 1px solid var(--border); padding-top: 14px;
-  }
-  .setup-actions .grow { flex: 1; }
-
-  .length-control { display: flex; align-items: center; gap: 8px; }
-  .length-control label { color: var(--muted); font-size: 12px; }
-  .length-control select {
-    background: var(--panel-2); color: var(--text);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 7px 10px; font-size: 13px;
-    cursor: pointer;
-  }
-
-  /* ───── Two-column area (recent + focus) ───── */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  /* History list rows */
-  .history-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 10px; align-items: center;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    margin-bottom: 8px;
-    cursor: pointer; transition: all 0.15s ease;
-  }
-  .history-row:hover { border-color: var(--border-2); transform: translateY(-1px); }
-  .history-score {
-    font-weight: 800; font-size: 16px; min-width: 64px;
-    padding: 6px 10px; border-radius: 8px; text-align: center;
-    background: var(--panel-3); border: 1px solid var(--border);
-  }
-  .history-score.good { color: #b9f1cc; border-color: rgba(34,197,94,0.4); background: var(--success-soft); }
-  .history-score.mid  { color: #ffe1ae; border-color: rgba(245,158,11,0.4); background: var(--warning-soft); }
-  .history-score.bad  { color: #ffd4d4; border-color: rgba(239,68,68,0.4); background: var(--danger-soft); }
-  .history-meta { font-size: 13px; }
-  .history-meta .when { color: var(--muted); font-size: 11px; }
-  .history-actions { color: var(--muted); font-size: 18px; }
-  .empty-note { color: var(--muted); font-size: 13px; padding: 12px 4px; text-align: center; }
-
-  /* Focus list rows */
-  .focus-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px; align-items: center;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    margin-bottom: 6px;
-  }
-  .focus-row .name { font-weight: 600; }
-  .focus-row .english { color: var(--muted); font-size: 12px; }
-  .focus-row .acc {
-    font-weight: 800; padding: 4px 10px; border-radius: 999px; font-size: 12px;
-    background: var(--panel-3); border: 1px solid var(--border);
-  }
-  .focus-row .acc.bad { color: #ffd4d4; border-color: rgba(239,68,68,0.4); background: var(--danger-soft); }
-  .focus-row .acc.mid { color: #ffe1ae; border-color: rgba(245,158,11,0.4); background: var(--warning-soft); }
-  .focus-row .acc.good { color: #b9f1cc; border-color: rgba(34,197,94,0.4); background: var(--success-soft); }
-
-  /* ───── Quiz toolbar + view ───── */
-  .quiz-toolbar {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: center; gap: 14px;
-    margin-bottom: 14px;
-  }
-  .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
-  .progress {
-    height: 6px; border-radius: 999px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--accent), #ff6b75);
-    transition: width 0.3s ease;
-  }
-  .quiz-meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-  .pill {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 999px; padding: 5px 11px; font-size: 12px; color: var(--muted);
-  }
-  .pill b { color: var(--text); }
-
-  .quiz-card { overflow: hidden; }
-  .image-wrap {
-    background:
-      repeating-linear-gradient(45deg, #0e1117 0 12px, #0a0d12 12px 24px);
-    display: grid; place-items: center;
-    min-height: 360px; padding: 20px; position: relative;
-  }
-  .image-wrap img {
-    max-width: 100%; max-height: 440px;
-    border-radius: 10px; background: #fff; padding: 6px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-  }
-  .image-wrap .img-loading,
-  .image-wrap .img-error {
-    position: absolute; inset: 0;
-    display: none; place-items: center;
-    color: var(--muted); font-size: 14px; text-align: center; padding: 20px;
-  }
-  .image-wrap.loading .img-loading { display: grid; }
-  .image-wrap.error   .img-error   { display: grid; }
-  .image-wrap.loading img,
-  .image-wrap.error   img { visibility: hidden; }
-
-  .belt-badge {
-    position: absolute; top: 14px; left: 14px;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.5px; text-transform: uppercase;
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.10);
-    color: #fff; padding: 5px 9px; border-radius: 999px;
-    backdrop-filter: blur(4px);
-  }
-  .belt-badge .dot {
-    display: inline-block; width: 8px; height: 8px;
-    border-radius: 50%; margin-right: 6px; vertical-align: middle;
-  }
-
-  .q-body { padding: 20px 22px 22px; }
-  .question { font-size: 20px; font-weight: 700; margin: 0 0 14px; }
-  .question .hint { display: block; color: var(--muted); font-size: 14px; font-weight: 500; margin-top: 4px; }
-  .options {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  }
-  .option {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); text-align: left;
-    padding: 14px; border-radius: 12px;
-    font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s ease;
-  }
-  .option:hover:not([disabled]) { border-color: var(--border-2); transform: translateY(-1px); }
-  .option .kbd {
-    font-size: 11px; font-weight: 700; color: var(--muted);
-    background: #0e1117; border: 1px solid var(--border);
-    border-radius: 6px; padding: 2px 6px; min-width: 20px; text-align: center;
-  }
-  .option.correct { background: var(--success-soft); border-color: var(--success); color: #d2fbe0; }
-  .option.wrong   { background: var(--danger-soft);  border-color: var(--danger);  color: #ffd4d4; }
-  .option[disabled] { cursor: default; }
-
-  .feedback {
-    margin-top: 14px; padding: 12px 14px; border-radius: 10px;
-    font-size: 14px; display: none;
-  }
-  .feedback.show { display: block; }
-  .feedback.ok { background: var(--success-soft); color: #b9f1cc; border: 1px solid rgba(34,197,94,0.4); }
-  .feedback.no { background: var(--danger-soft);  color: #ffd4d4; border: 1px solid rgba(239,68,68,0.4); }
-
-  .controls {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; margin-top: 16px;
-  }
-  .controls .left { color: var(--muted); font-size: 12px; }
-
-  /* ───── Summary view ───── */
-  .summary-card { padding: 28px; text-align: center; }
-  .summary-card h2 { font-size: 28px; margin: 0 0 6px; }
-  .summary-card p  { color: var(--muted); margin: 0 0 14px; }
-  .score-big {
-    font-size: 56px; font-weight: 900; margin: 14px 0;
-    background: linear-gradient(180deg, var(--accent), var(--accent-2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .summary-metrics {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 10px; margin: 18px 0 22px; text-align: left;
-  }
-  .metric {
-    background: var(--panel-2); border: 1px solid var(--border);
-    padding: 12px 14px; border-radius: 12px;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  .metric span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-  .metric b { font-size: 18px; font-weight: 800; }
-  .summary-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-
-  /* Wrong list */
-  #wrongPanel { margin-top: 14px; }
-  .wrong-row {
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 12px; align-items: center;
-    padding: 10px;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 8px;
-  }
-  .wrong-row .thumb {
-    width: 80px; height: 80px; border-radius: 8px;
-    object-fit: contain; background: #fff; padding: 4px;
-  }
-  .wrong-row .thumb-placeholder {
-    width: 80px; height: 80px; border-radius: 8px;
-    background: var(--panel-3); display: grid; place-items: center;
-    color: var(--muted); font-size: 11px;
-  }
-  .wrong-row .name { font-weight: 700; }
-  .wrong-row .english { color: var(--muted); font-size: 13px; }
-  .wrong-row .what-i-said {
-    margin-top: 4px; font-size: 12px;
-    color: var(--muted);
-  }
-  .wrong-row .what-i-said b { color: #ffd4d4; }
-
-  /* ───── Modal ───── */
-  .modal {
-    position: fixed; inset: 0;
-    z-index: 100;
-    display: grid; place-items: center;
-    padding: 20px;
-  }
-  .modal[hidden] { display: none; }
-  .modal-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-  }
-  .modal-panel {
-    position: relative;
-    width: min(720px, 100%);
-    max-height: 86vh;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-    display: flex; flex-direction: column;
-  }
-  .modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-  }
-  .modal-header h3 { margin: 0; font-size: 16px; }
-  .modal-body { padding: 14px 18px; overflow: auto; }
-
-  .history-detail-meta {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 8px; margin-bottom: 14px;
-  }
-  .history-detail-meta .metric { padding: 10px; }
-
-  .qa-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 10px; align-items: center;
-    padding: 8px 10px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 10px; margin-bottom: 6px;
-  }
-  .qa-row .ind {
-    width: 22px; height: 22px; border-radius: 50%;
-    display: grid; place-items: center;
-    font-size: 12px; font-weight: 800;
-  }
-  .qa-row .ind.ok { color: #b9f1cc; background: var(--success-soft); border: 1px solid rgba(34,197,94,0.4); }
-  .qa-row .ind.no { color: #ffd4d4; background: var(--danger-soft);  border: 1px solid rgba(239,68,68,0.4); }
-  .qa-row .qa-name { font-weight: 700; font-size: 13px; }
-  .qa-row .qa-sub  { color: var(--muted); font-size: 11px; }
-  .qa-row .qa-pill {
-    color: var(--muted); font-size: 11px;
-    padding: 3px 8px; border-radius: 999px;
-    border: 1px solid var(--border); background: var(--panel-3);
-  }
-
-  /* ───── Footer ───── */
-  footer {
-    margin-top: 22px; text-align: center; color: var(--muted); font-size: 12px;
-  }
-  footer a { color: var(--muted); }
-
-  /* ───── Responsive ───── */
-  @media (max-width: 820px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .summary-metrics { grid-template-columns: repeat(2, 1fr); }
-    .history-detail-meta { grid-template-columns: repeat(2, 1fr); }
-    .two-col { grid-template-columns: 1fr; }
-    .setup-row { grid-template-columns: 1fr; }
-    .hero { grid-template-columns: 1fr; padding: 18px; }
-    .hero-photo { width: 100%; max-width: 280px; height: 320px; margin: 0 auto; }
-    .mode-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 540px) {
-    .options { grid-template-columns: 1fr; }
-    .image-wrap { min-height: 260px; }
-    .image-wrap img { max-height: 320px; }
-    h1 { font-size: 18px; }
-    .quiz-toolbar { grid-template-columns: 1fr; }
-    .quiz-meta { justify-content: flex-start; }
-  }
-</style>
+<meta name="description" content="Study the 47 throws of Kodokan Judo — flashcards, quizzes, and spaced repetition. Works offline." />
+<meta name="theme-color" content="#0c0e13" />
+<title>Judo Throws — Flashcards &amp; Quiz</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="app">
-    <header>
-      <div class="brand">
-        <div class="brand-mark">柔</div>
-        <div>
-          <h1>Judo Throws Flashcard Quiz</h1>
-          <div class="subtitle">67 Throws of Kodokan Judo</div>
-        </div>
-      </div>
+    <h1 class="visually-hidden">Judo Throws — Flashcards &amp; Quiz</h1>
+    <header class="site-header">
+      <button class="brand" id="brandBtn">
+        <span class="brand-mark" aria-hidden="true">柔</span>
+        <span>
+          <span class="brand-title">Judo Throws</span>
+          <span class="subtitle">Gokyo no Waza &amp; Habukareta Waza · 47 throws</span>
+        </span>
+      </button>
+
+      <nav class="nav-tabs" aria-label="Sections">
+        <button class="nav-tab" id="tabHome" aria-current="page">Home</button>
+        <button class="nav-tab" id="tabStudy">Study</button>
+        <button class="nav-tab" id="tabLibrary">Library</button>
+      </nav>
+
       <div class="header-actions">
-        <button class="btn ghost" id="historyBtn">📜 History</button>
-        <button class="btn ghost" id="resetAllBtn" title="Erase all stats and history">⚙️ Reset</button>
+        <button class="btn ghost icon-btn" id="themeBtn" aria-label="Switch theme"><span aria-hidden="true">🌙</span></button>
+        <button class="btn ghost icon-btn" id="helpBtn" aria-label="Keyboard shortcuts"><span aria-hidden="true">⌨️</span></button>
+        <button class="btn ghost" id="historyBtn"><span aria-hidden="true">📜</span> History</button>
       </div>
     </header>
 
+    <main>
     <!-- ═══════════════ HOME VIEW ═══════════════ -->
     <div id="homeView" class="view">
-      <!-- Hero -->
-      <section class="hero card">
-        <div class="hero-photo">
-          <img src="kano_jigoro.jpg" alt="Portrait of Kanō Jigorō" />
-        </div>
-        <div class="hero-text">
-          <div class="hero-eyebrow">Founder of Kodokan Judo</div>
-          <div class="hero-name">Kanō Jigorō<span class="hero-name-jp">嘉納 治五郎</span></div>
-          <div class="hero-dates">28 October 1860 — 4 May 1938</div>
-          <blockquote>
-            "Maximum efficiency with minimum effort. Mutual welfare and benefit."
-            <cite>— 精力善用 · 自他共栄 (Seiryoku Zen'yō · Jita Kyōei)</cite>
-          </blockquote>
-          <div class="hero-tags">
-            <span class="hero-tag">Founded Kodokan, 1882</span>
-            <span class="hero-tag">First Asian IOC member</span>
-            <span class="hero-tag">7th dan judo</span>
+      <!-- Setup first: the primary action deserves the top slot -->
+      <section class="setup-panel" aria-labelledby="setupTitle">
+        <h2 id="setupTitle" class="visually-hidden">Quiz setup</h2>
+        <div class="setup-row">
+          <div>
+            <div class="setup-title" id="beltGroupLabel">Belt / Group</div>
+            <div class="chip-row" id="beltChips" role="group" aria-labelledby="beltGroupLabel"></div>
+            <p class="muted small" id="beltHint" hidden>Select at least one group to start.</p>
+          </div>
+          <div>
+            <div class="setup-title" id="modeGroupLabel">Quiz Mode</div>
+            <div class="mode-grid" id="modeRow" role="radiogroup" aria-labelledby="modeGroupLabel"></div>
+          </div>
+          <div class="setup-actions">
+            <div class="length-control">
+              <label for="lengthSelect">Length:</label>
+              <select id="lengthSelect">
+                <option value="10" selected>10 questions</option>
+                <option value="20">20 questions</option>
+                <option value="all">All selected throws</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <button class="btn ghost small" id="selectAllBtn">Select all</button>
+            <button class="btn ghost small" id="clearBtn">Clear</button>
+            <button class="btn primary" id="startBtn">Start Quiz</button>
           </div>
         </div>
       </section>
 
       <!-- Lifetime stats -->
-      <section class="stats-grid">
+      <section class="stats-grid" aria-label="Lifetime statistics">
         <div class="stat-card">
           <div class="stat-label">Tests Taken</div>
           <div class="stat-value" id="lt-tests">0</div>
-          <div class="stat-sub" id="lt-tests-sub">Get started below</div>
+          <div class="stat-sub" id="lt-tests-sub">Get started above</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Overall Accuracy</div>
@@ -598,76 +84,113 @@
         <div class="stat-card">
           <div class="stat-label">Throws Mastered</div>
           <div class="stat-value" id="lt-mastered">0 / 47</div>
-          <div class="stat-sub" id="lt-mastered-sub">≥80% over 3+ attempts</div>
+          <div class="stat-sub">≥80% over 3+ attempts</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Best Streak</div>
-          <div class="stat-value" id="lt-best-streak">0</div>
-          <div class="stat-sub">consecutive correct</div>
-        </div>
-      </section>
-
-      <!-- Setup -->
-      <section class="setup-panel">
-        <div class="setup-row">
-          <div>
-            <div class="setup-title">Belt / Group</div>
-            <div class="chip-row" id="beltChips"></div>
-          </div>
-          <div>
-            <div class="setup-title">Quiz Mode</div>
-            <div class="mode-grid" id="modeRow">
-              <button class="mode-card active" data-mode="image-to-name">
-                <div class="mode-icon">🎬</div>
-                <div class="mode-title">Visual Test</div>
-                <div class="mode-desc">Watch the GIF, name the throw</div>
-              </button>
-              <button class="mode-card" data-mode="english-to-name">
-                <div class="mode-icon">📝</div>
-                <div class="mode-title">Text: EN → JP</div>
-                <div class="mode-desc">English meaning → Japanese name</div>
-              </button>
-              <button class="mode-card" data-mode="name-to-english">
-                <div class="mode-icon">🇯🇵</div>
-                <div class="mode-title">Text: JP → EN</div>
-                <div class="mode-desc">Japanese name → English meaning</div>
-              </button>
-            </div>
-          </div>
-          <div class="setup-actions">
-            <div class="length-control">
-              <label for="lengthSelect">Length:</label>
-              <select id="lengthSelect">
-                <option value="10">10 questions</option>
-                <option value="20">20 questions</option>
-                <option value="all" selected>All selected throws</option>
-              </select>
-            </div>
-            <div class="grow"></div>
-            <button class="btn ghost small" id="selectAllBtn">Select all belts</button>
-            <button class="btn ghost small" id="clearBtn">Clear</button>
-            <button class="btn primary" id="startBtn">Start Quiz</button>
-          </div>
+        <div class="stat-card" id="dueCard">
+          <div class="stat-label">Due for Review</div>
+          <div class="stat-value" id="lt-due">0</div>
+          <div class="stat-sub" id="lt-due-sub">spaced repetition</div>
         </div>
       </section>
 
       <!-- Recent + Focus -->
-      <section class="two-col">
+      <section class="two-col" aria-label="Progress panels">
         <div class="card panel">
           <div class="panel-header">
-            <h3>Recent Tests</h3>
+            <h2 class="panel-title-h3">Recent Tests</h2>
             <button class="btn ghost small" id="viewAllHistoryBtn">View all</button>
           </div>
           <div id="recentTests"></div>
         </div>
         <div class="card panel">
           <div class="panel-header">
-            <h3>Throws to Focus On</h3>
-            <span class="muted small">lowest accuracy</span>
+            <h2 class="panel-title-h3">Throws to Focus On</h2>
+            <button class="btn ghost small" id="drillFocusBtn" hidden>🎯 Drill these</button>
           </div>
           <div id="focusList"></div>
         </div>
       </section>
+
+      <!-- About / hero, demoted below the working area -->
+      <section class="hero card" aria-label="About Kanō Jigorō" style="margin-top: 18px; margin-bottom: 0;">
+        <span class="hero-vertical" aria-hidden="true">投げ技</span>
+        <div class="hero-photo">
+          <img src="kano_jigoro.jpg" alt="Portrait of Kanō Jigorō" loading="lazy" />
+        </div>
+        <div class="hero-text">
+          <div class="hero-eyebrow">Founder of Kodokan Judo</div>
+          <h2 class="hero-name">Kanō Jigorō<span class="hero-name-jp" lang="ja">嘉納 治五郎</span></h2>
+          <div class="hero-dates">28 October 1860 — 4 May 1938</div>
+          <blockquote>
+            "Maximum efficiency with minimum effort. Mutual welfare and benefit."
+            <cite>— <span lang="ja">精力善用 · 自他共栄</span> (Seiryoku Zen'yō · Jita Kyōei)</cite>
+          </blockquote>
+          <div class="hero-tags">
+            <span class="hero-tag">Founded Kodokan, 1882</span>
+            <span class="hero-tag">First Asian IOC member</span>
+            <span class="hero-tag">Father of modern judo</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══════════════ STUDY VIEW ═══════════════ -->
+    <div id="studyView" class="view" hidden>
+      <div class="study-toolbar">
+        <div class="chip-row" id="studyBeltChips" role="group" aria-label="Belt groups"></div>
+        <div class="grow"></div>
+        <div class="search-box">
+          <input type="search" id="studySearch" placeholder="Search throws…" aria-label="Search throws" />
+        </div>
+        <select id="studyFilter" aria-label="Card filter">
+          <option value="all" selected>All cards</option>
+          <option value="due">Due for review</option>
+          <option value="review">Marked “review”</option>
+          <option value="unseen">Not yet studied</option>
+        </select>
+        <select id="studyFront" aria-label="Card front">
+          <option value="visual" selected>Front: Animation</option>
+          <option value="name">Front: Japanese</option>
+          <option value="english">Front: English</option>
+        </select>
+      </div>
+
+      <div class="study-progress" aria-hidden="true"><div class="fill" id="studyFill"></div></div>
+
+      <div class="study-stage" id="studyStage">
+        <button class="flashcard" id="flashcard" aria-label="Flashcard — press to flip">
+          <span class="face front" id="cardFront"></span>
+          <span class="face back" id="cardBack"></span>
+        </button>
+        <div class="study-empty card panel" id="studyEmpty" hidden>
+          <h2 class="panel-title-h3">No cards match</h2>
+          <p class="muted">Adjust the belt groups, search, or filter above.</p>
+        </div>
+      </div>
+
+      <div class="study-controls">
+        <button class="btn" id="prevCardBtn" aria-label="Previous card">←&ensp;Prev</button>
+        <button class="btn primary" id="flipBtn">Flip</button>
+        <button class="btn" id="nextCardBtn" aria-label="Next card">Next&ensp;→</button>
+        <button class="btn ghost" id="shuffleBtn">🔀 Shuffle</button>
+      </div>
+      <div class="study-mark-row">
+        <button class="btn know" id="knowBtn">✓ I know this</button>
+        <button class="btn review" id="reviewBtn">↻ Needs review</button>
+        <span class="pill" id="studyCounts" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <!-- ═══════════════ LIBRARY VIEW ═══════════════ -->
+    <div id="libraryView" class="view" hidden>
+      <div class="study-toolbar">
+        <div class="search-box">
+          <input type="search" id="librarySearch" placeholder="Search by name, kanji, or meaning…" aria-label="Search library" />
+        </div>
+        <div class="grow"></div>
+        <span class="pill" id="libraryCount"></span>
+      </div>
+      <div class="library-groups" id="libraryGroups"></div>
     </div>
 
     <!-- ═══════════════ QUIZ VIEW ═══════════════ -->
@@ -678,29 +201,33 @@
           <div class="quiz-meta">
             <span class="pill">Q <b id="qIndex">0</b>/<b id="qTotal">0</b></span>
             <span class="pill">Score <b id="score">0</b></span>
-            <span class="pill">Streak <b id="streak">0</b></span>
-            <span class="pill">⏱ <b id="timer">0:00</b></span>
+            <span class="pill" id="streakPill">Streak <b id="streak">0</b></span>
+            <span class="pill"><span aria-hidden="true">⏱</span><span class="visually-hidden">Elapsed time</span> <b id="timer">0:00</b></span>
           </div>
-          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
         </div>
       </div>
 
       <section class="card quiz-card">
         <div class="image-wrap" id="imageWrap">
           <span class="belt-badge" id="beltBadge"></span>
-          <div class="img-loading">Loading image…</div>
-          <div class="img-error">Image could not be loaded.</div>
-          <img id="throwImage" alt="Judo throw" />
+          <div class="img-loading"><div><div class="spinner" aria-hidden="true"></div>Loading animation…</div></div>
+          <div class="img-error">The animation could not be loaded.<br /><span class="muted small">Check that the images folder is intact.</span></div>
+          <img id="throwImage" alt="Animated demonstration of a judo throw — identify it from the answer options" />
         </div>
         <div class="q-body">
-          <div class="question" id="questionText">
+          <h2 class="question" id="questionText" tabindex="-1">
             <span id="qMain">What throw is this?</span>
             <span class="hint" id="questionHint"></span>
-          </div>
+          </h2>
           <div class="options" id="options"></div>
-          <div class="feedback" id="feedback"></div>
+          <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
           <div class="controls">
-            <div class="left">Tip: <b>1–4</b> to answer · <b>Enter</b> for next</div>
+            <label class="left" for="autoNextChk" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="autoNextChk" /> Auto-advance when correct
+            </label>
             <div style="display:flex; gap:8px;">
               <button class="btn ghost" id="quitBtn">End now</button>
               <button class="btn primary" id="nextBtn" disabled>Next →</button>
@@ -713,8 +240,8 @@
     <!-- ═══════════════ SUMMARY VIEW ═══════════════ -->
     <div id="summaryView" class="view" hidden>
       <section class="card summary-card">
-        <h2>Quiz complete!</h2>
-        <p id="summaryLine"></p>
+        <h2 id="summaryTitle" tabindex="-1">Quiz complete!</h2>
+        <p id="summaryLine" role="status"></p>
         <div class="score-big" id="finalScore">0 / 0</div>
         <div class="summary-metrics">
           <div class="metric"><span>Accuracy</span><b id="m-acc">—</b></div>
@@ -729,829 +256,55 @@
         </div>
       </section>
       <section class="card panel" id="wrongPanel" hidden>
-        <div class="panel-header"><h3>Review Wrong Answers</h3></div>
+        <div class="panel-header"><h2 class="panel-title-h3">Review Wrong Answers</h2></div>
+        <p class="muted small" style="margin-top:0;">Tap a row to watch the full animation.</p>
         <div id="wrongList"></div>
       </section>
     </div>
+    </main>
 
-    <footer>
-      Data &amp; GIFs from
+    <footer class="site-footer">
+      <span lang="ja">精力善用 · 自他共栄</span><br />
+      Data &amp; animations from
       <a href="https://judo-caja.com/techniques.html" target="_blank" rel="noopener">judo-caja.com</a>
       · Photo via
       <a href="https://en.wikipedia.org/wiki/Kan%C5%8D_Jigor%C5%8D" target="_blank" rel="noopener">Wikipedia</a>
+      · Works offline
     </footer>
   </div>
 
-  <!-- ═══════════════ HISTORY MODAL ═══════════════ -->
-  <div id="historyModal" class="modal" hidden>
+  <!-- ═══════════════ MODAL (history / throw detail / help) ═══════════════ -->
+  <div id="modal" class="modal" hidden>
     <div class="modal-backdrop" data-close></div>
-    <div class="modal-panel">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header">
-        <h3 id="modalTitle">Test History</h3>
-        <button class="btn ghost icon-btn" data-close>✕</button>
+        <h2 id="modalTitle">Title</h2>
+        <button class="btn ghost icon-btn" data-close aria-label="Close dialog"><span aria-hidden="true">✕</span></button>
       </div>
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
 
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   Data: 47 throws (local GIFs)
-═══════════════════════════════════════════════════════════════ */
-const IMG_BASE = "";
-const THROWS = [
-  { name: "Deashi Harai",         english: "Forward Foot Sweep",          img: "images/technique/deashibarai.gif",       group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Hiza Guruma",          english: "Knee Wheel",                  img: "images/technique/hizaguruma.gif",        group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Sasae Tsurikomi Ashi", english: "Lifting Pulling Ankle Block", img: "images/technique/sasaetsu.gif",          group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Uki Goshi",            english: "Floating Hip",                img: "images/technique/uki_goshi.gif",         group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Osoto Gari",           english: "Large Outer Reaping",         img: "images/technique/osoto_gari.gif",        group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "O Goshi",              english: "Large Hip Throw",             img: "images/technique/ogoshi.gif",            group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Ouchi Gari",           english: "Large Inner Reaping",         img: "images/technique/ouchi_gari.gif",        group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Seoi Nage",            english: "Two Arm Shoulder Throw",      img: "images/technique/seoi-nage.gif",         group: "Dai Ikkyo",       belt: "Yellow" },
-  { name: "Kosoto Gari",          english: "Small Outside Reap",          img: "images/technique/kosotogari.gif",        group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Kouchi Gari",          english: "Small Inner Reap",            img: "images/technique/kouchigari.gif",        group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Koshi Guruma",         english: "Hip Wheel",                   img: "images/technique/koshiguruma.gif",       group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Tsurikomi Goshi",      english: "Lifting Pulling Hip",         img: "images/technique/tsurikomi_goshi.gif",   group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Okuriashi Harai",      english: "Following Foot Sweep",        img: "images/technique/okuriash_Haraii.gif",   group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Tai Otoshi",           english: "Body Drop",                   img: "images/technique/tai_otoshi.gif",        group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Harai Goshi",          english: "Sweeping Hip Throw",          img: "images/technique/hara_igoshi.gif",       group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Uchi Mata",            english: "Inner Thigh Throw",           img: "images/technique/uchi_mata.gif",         group: "Dai Nikyo",       belt: "Orange" },
-  { name: "Kosoto Gake",          english: "Small Outside Hook",          img: "images/technique/kosotogake.gif",        group: "Dai Sankyo",      belt: "Green" },
-  { name: "Tsuri Goshi",          english: "Lifting Hip",                 img: "images/technique/tsuri_goshi.gif",       group: "Dai Sankyo",      belt: "Green" },
-  { name: "Yoko Otoshi",          english: "Side Drop",                   img: "images/technique/yoko_otoshi.gif",       group: "Dai Sankyo",      belt: "Green" },
-  { name: "Ashi Guruma",          english: "Leg Wheel",                   img: "images/technique/ashiguruma.gif",        group: "Dai Sankyo",      belt: "Green" },
-  { name: "Hane Goshi",           english: "Spring Hip Throw",            img: "images/technique/hanegoshi.gif",         group: "Dai Sankyo",      belt: "Green" },
-  { name: "Harai Tsurikomi Ashi", english: "Lifting Pulling Foot Sweep",  img: "images/technique/haraitsurikomiashi.gif",group: "Dai Sankyo",      belt: "Green" },
-  { name: "Tomoe Nage",           english: "Circle Throw",                img: "images/technique/tomoe_nage.gif",        group: "Dai Sankyo",      belt: "Green" },
-  { name: "Sumi Gaeshi",          english: "Corner Reversal",             img: "images/technique/sumi_gaesh.gif",        group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Tani Otoshi",          english: "Valley Drop",                 img: "images/technique/tani_otoshi.gif",       group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Hane Makikomi",        english: "Spring Wrap-around Throw",    img: "images/technique/hanemakikomi.gif",      group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Sukui Nage",           english: "Scoop Throw",                 img: "images/technique/sukui_nage.gif",        group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Utsuri Goshi",         english: "Changing Hip Throw",          img: "images/technique/utsuri_goshi.gif",      group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "O Guruma",             english: "Large Wheel",                 img: "images/technique/oguruma.gif",           group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Soto Makikomi",        english: "Outer Wrap Around",           img: "images/technique/soto_makikomi.gif",     group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Uki Otoshi",           english: "Floating Drop",               img: "images/technique/uki_otoshi.gif",        group: "Dai Yonkyo",      belt: "Blue" },
-  { name: "Osoto Guruma",         english: "Large Outer Wheel",           img: "images/technique/osoto_guruma.gif",      group: "Gokyo",           belt: "Brown" },
-  { name: "Uki Waza",             english: "Floating Technique",          img: "images/technique/uki_waza.gif",          group: "Gokyo",           belt: "Brown" },
-  { name: "Yoko Wakare",          english: "Side Separation",             img: "images/technique/yoko_wakare.gif",       group: "Gokyo",           belt: "Brown" },
-  { name: "Yoko Guruma",          english: "Side Wheel",                  img: "images/technique/yoko_guruma.gif",       group: "Gokyo",           belt: "Brown" },
-  { name: "Ushiro Goshi",         english: "Rear Hip Throw",              img: "images/technique/ushiro_goshi.gif",      group: "Gokyo",           belt: "Brown" },
-  { name: "Ura Nage",             english: "Rear Throw",                  img: "images/technique/ura_nage.gif",          group: "Gokyo",           belt: "Brown" },
-  { name: "Sumi Otoshi",          english: "Corner Drop",                 img: "images/technique/sumi_otoshi.gif",       group: "Gokyo",           belt: "Brown" },
-  { name: "Yoko Gake",            english: "Side Hook",                   img: "images/technique/yoko_gake2.gif",        group: "Gokyo",           belt: "Brown" },
-  { name: "Obi Otoshi",           english: "Belt Drop",                   img: "images/technique/obi_otoshi.gif",        group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Seoi Otoshi",          english: "Shoulder Drop",               img: "images/technique/seoio_toshi.gif",       group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Yama Arashi",          english: "Mountain Storm",              img: "images/technique/yama_arashi.gif",       group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Osoto Otoshi",         english: "Large Outer Drop",            img: "images/technique/osoto_otoshi.gif",      group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Daki Wakare",          english: "High Lift and Separate",      img: "images/technique/dakiwakare.gif",        group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Hikikomi Gaeshi",      english: "Pulling-in Reversal",         img: "images/technique/hikikomigaeshi.gif",    group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Tawara Gaeshi",        english: "Rice Bale Reversal",          img: "images/technique/tawara_gaeshi.gif",     group: "Habukareta Waza", belt: "Preserved" },
-  { name: "Uchi Makikomi",        english: "Inner Wraparound",            img: "images/technique/uchi_makikomi.gif",     group: "Habukareta Waza", belt: "Preserved" },
-];
-const TOTAL_THROWS = THROWS.length;
-
-const BELT_ORDER = ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved"];
-const BELT_GROUP = {
-  "Yellow":    "Dai Ikkyo (1st)",
-  "Orange":    "Dai Nikyo (2nd)",
-  "Green":     "Dai Sankyo (3rd)",
-  "Blue":      "Dai Yonkyo (4th)",
-  "Brown":     "Gokyo (5th)",
-  "Preserved": "Habukareta Waza"
-};
-const MODE_LABEL = {
-  "image-to-name":   "🎬 Visual",
-  "english-to-name": "📝 EN→JP",
-  "name-to-english": "🇯🇵 JP→EN"
-};
-
-/* ═══════════════════════════════════════════════════════════════
-   Storage
-═══════════════════════════════════════════════════════════════ */
-const KEY = {
-  current: "judo_quiz_current_v1",
-  history: "judo_quiz_history_v1",
-  throws:  "judo_quiz_throws_v1",
-  prefs:   "judo_quiz_prefs_v1"
-};
-const storage = {
-  get(key, fallback) {
-    try {
-      const v = localStorage.getItem(key);
-      if (v === null) return fallback;
-      const parsed = JSON.parse(v);
-      return parsed === null || parsed === undefined ? fallback : parsed;
-    } catch { return fallback; }
-  },
-  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
-  del(key) {
-    try { sessionStorage.removeItem(key); } catch {}
-    try { localStorage.removeItem(key); } catch {}
-  }
-};
-
-function clearInProgressStorage() {
-  storage.del(KEY.current);
-}
-clearInProgressStorage();
-
-/* ═══════════════════════════════════════════════════════════════
-   State
-═══════════════════════════════════════════════════════════════ */
-const state = {
-  view: "home",
-  selectedBelts: new Set(BELT_ORDER),
-  mode: "image-to-name",
-  length: "all",
-  quiz: null   // active quiz when not on home
-};
-
-let timerHandle = null;
-
-/* ═══════════════════════════════════════════════════════════════
-   Helpers
-═══════════════════════════════════════════════════════════════ */
-function $(id) { return document.getElementById(id); }
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-function pickDistinct(pool, correct, n, keyFn) {
-  const correctKey = keyFn(correct);
-  const out = [];
-  const seen = new Set([correctKey]);
-  for (const item of shuffle(pool)) {
-    const k = keyFn(item);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(item);
-    if (out.length >= n) break;
-  }
-  return out;
-}
-function fmtDuration(ms) {
-  const sec = Math.max(0, Math.round(ms / 1000));
-  const m = Math.floor(sec / 60), s = sec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-function fmtRelative(ts) {
-  const diff = Date.now() - ts;
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(ts).toLocaleDateString();
-}
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-
-/* ═══════════════════════════════════════════════════════════════
-   View routing
-═══════════════════════════════════════════════════════════════ */
-function showView(v) {
-  state.view = v;
-  ["home", "quiz", "summary"].forEach(name => {
-    $(name + "View").hidden = (name !== v);
-  });
-  window.scrollTo({ top: 0, behavior: "instant" });
-  if (v === "home") refreshHome();
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Home: rendering
-═══════════════════════════════════════════════════════════════ */
-function refreshHome() {
-  clearInProgressStorage();
-  renderLifetimeStats();
-  renderRecentTests();
-  renderFocusList();
-}
-
-function renderBeltChips() {
-  const host = $("beltChips");
-  host.innerHTML = "";
-  for (const belt of BELT_ORDER) {
-    const count = THROWS.filter(t => t.belt === belt).length;
-    const btn = document.createElement("button");
-    btn.className = "chip" + (state.selectedBelts.has(belt) ? " active" : "");
-    btn.dataset.belt = belt;
-    btn.innerHTML =
-      `<span class="dot"></span>${BELT_GROUP[belt]} <span style="color:var(--muted);margin-left:2px;">(${count})</span>`;
-    btn.addEventListener("click", () => {
-      if (state.selectedBelts.has(belt)) state.selectedBelts.delete(belt);
-      else state.selectedBelts.add(belt);
-      btn.classList.toggle("active");
-      savePrefs();
-    });
-    host.appendChild(btn);
-  }
-}
-
-function wireModeRow() {
-  const row = $("modeRow");
-  row.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-mode]");
-    if (!b) return;
-    row.querySelectorAll("[data-mode]").forEach(c => c.classList.remove("active"));
-    b.classList.add("active");
-    state.mode = b.dataset.mode;
-    savePrefs();
-  });
-}
-
-function savePrefs() {
-  storage.set(KEY.prefs, {
-    mode: state.mode,
-    belts: Array.from(state.selectedBelts),
-    length: state.length
-  });
-}
-function loadPrefs() {
-  const p = storage.get(KEY.prefs, null);
-  if (!p) return;
-  if (p.mode) state.mode = p.mode;
-  if (Array.isArray(p.belts)) state.selectedBelts = new Set(p.belts);
-  if (p.length) state.length = p.length;
-  // reflect in pre-rendered DOM
-  $("lengthSelect").value = state.length;
-  document.querySelectorAll("[data-mode]").forEach(c => {
-    c.classList.toggle("active", c.dataset.mode === state.mode);
-  });
-}
-
-function renderLifetimeStats() {
-  const hist = storage.get(KEY.history, []);
-  const ts = storage.get(KEY.throws, {});
-  const tests = hist.length;
-  let totalQ = 0, totalC = 0, bestStreak = 0;
-  for (const h of hist) {
-    totalQ += h.total || 0;
-    totalC += h.score || 0;
-    bestStreak = Math.max(bestStreak, h.bestStreak || 0);
-  }
-  let mastered = 0;
-  for (const t of THROWS) {
-    const s = ts[t.name];
-    if (s && s.seen >= 3 && (s.correct / s.seen) >= 0.8) mastered++;
-  }
-
-  $("lt-tests").textContent = tests;
-  $("lt-tests-sub").textContent = tests === 0 ? "Get started below" : (tests === 1 ? "1 test completed" : `${tests} tests completed`);
-  $("lt-acc").textContent = totalQ ? Math.round((totalC / totalQ) * 100) + "%" : "—";
-  $("lt-acc-sub").textContent = totalQ ? `${totalC} / ${totalQ} correct` : "across all questions";
-  $("lt-mastered").textContent = `${mastered} / ${TOTAL_THROWS}`;
-  $("lt-mastered-sub").textContent = "≥80% over 3+ attempts";
-  $("lt-best-streak").textContent = bestStreak;
-}
-
-function renderRecentTests() {
-  const host = $("recentTests");
-  const hist = storage.get(KEY.history, []);
-  if (!hist.length) {
-    host.innerHTML = `<div class="empty-note">No tests yet — start one below.</div>`;
-    return;
-  }
-  host.innerHTML = "";
-  for (const h of hist.slice(0, 5)) {
-    const acc = Math.round((h.score / h.total) * 100);
-    const cls = acc >= 80 ? "good" : acc >= 60 ? "mid" : "bad";
-    const row = document.createElement("div");
-    row.className = "history-row";
-    row.dataset.id = h.id;
-    row.innerHTML = `
-      <div class="history-score ${cls}">${acc}%</div>
-      <div class="history-meta">
-        <div><b>${h.score} / ${h.total}</b> · ${MODE_LABEL[h.mode] || h.mode}</div>
-        <div class="when">${fmtRelative(h.completedAt)} · ${fmtDuration(h.durationMs)}${h.partial ? " · partial" : ""}</div>
-      </div>
-      <div class="history-actions">›</div>
-    `;
-    row.addEventListener("click", () => openHistoryDetail(h.id));
-    host.appendChild(row);
-  }
-}
-
-function renderFocusList() {
-  const host = $("focusList");
-  const ts = storage.get(KEY.throws, {});
-  const rows = THROWS
-    .map(t => {
-      const s = ts[t.name];
-      if (!s || s.seen < 2) return null;
-      return { t, seen: s.seen, correct: s.correct, acc: s.correct / s.seen };
-    })
-    .filter(Boolean)
-    .filter(r => r.acc < 1)
-    .sort((a, b) => a.acc - b.acc || b.seen - a.seen)
-    .slice(0, 6);
-
-  if (!rows.length) {
-    host.innerHTML = `<div class="empty-note">Take a few quizzes — your weakest throws will appear here.</div>`;
-    return;
-  }
-  host.innerHTML = "";
-  for (const r of rows) {
-    const pct = Math.round(r.acc * 100);
-    const cls = pct < 50 ? "bad" : pct < 80 ? "mid" : "good";
-    const row = document.createElement("div");
-    row.className = "focus-row";
-    row.innerHTML = `
-      <div>
-        <div class="name">${escapeHtml(r.t.name)}</div>
-        <div class="english">${escapeHtml(r.t.english)} · ${escapeHtml(BELT_GROUP[r.t.belt])}</div>
-      </div>
-      <div class="acc ${cls}">${pct}% <span class="muted small">(${r.correct}/${r.seen})</span></div>
-    `;
-    host.appendChild(row);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Quiz lifecycle
-═══════════════════════════════════════════════════════════════ */
-function buildDeck(pool, len) {
-  const shuffled = shuffle(pool);
-  if (len === "all") return shuffled;
-  const n = parseInt(len, 10);
-  if (!Number.isFinite(n) || n <= 0) return shuffled;
-  return shuffled.slice(0, Math.min(n, shuffled.length));
-}
-
-function startQuiz(restartFromState) {
-  const len = $("lengthSelect").value;
-  state.length = len;
-  savePrefs();
-
-  let pool;
-  if (restartFromState && Array.isArray(restartFromState.deck)) {
-    pool = restartFromState.deck;
-  } else {
-    pool = THROWS.filter(t => state.selectedBelts.has(t.belt));
-    if (pool.length < 4) {
-      alert("Please select at least one belt group with 4+ throws (or multiple groups).");
-      return;
-    }
-  }
-
-  const deck = restartFromState ? pool : buildDeck(pool, len);
-  state.quiz = {
-    id: uid(),
-    mode: state.mode,
-    selectedBelts: Array.from(state.selectedBelts),
-    deck,
-    qIndex: 0,
-    score: 0,
-    streak: 0,
-    bestStreak: 0,
-    startedAt: Date.now(),
-    answered: false,
-    currentCorrect: null,
-    currentOptions: null,
-    results: []
-  };
-  showView("quiz");
-  $("qTotal").textContent = deck.length;
-  startTimer();
-  renderQuestion();
-}
-
-function startTimer() {
-  if (timerHandle) clearInterval(timerHandle);
-  const tick = () => {
-    if (!state.quiz) return;
-    $("timer").textContent = fmtDuration(Date.now() - state.quiz.startedAt);
-  };
-  tick();
-  timerHandle = setInterval(tick, 1000);
-}
-function stopTimer() {
-  if (timerHandle) clearInterval(timerHandle);
-  timerHandle = null;
-}
-
-function renderQuestion() {
-  const q = state.quiz;
-  const t = q.deck[q.qIndex];
-  $("qIndex").textContent = q.qIndex + 1;
-  $("score").textContent = q.score;
-  $("streak").textContent = q.streak;
-  $("progressFill").style.width = ((q.qIndex) / q.deck.length * 100).toFixed(1) + "%";
-
-  const beltBadge = $("beltBadge");
-  beltBadge.innerHTML = `<span class="dot" style="background: var(--${t.belt.toLowerCase()});"></span>${BELT_GROUP[t.belt]}`;
-
-  const imageWrap = $("imageWrap");
-  const img = $("throwImage");
-  const qMain = $("qMain");
-  const hint = $("questionHint");
-
-  // build per-mode question
-  let correctLabel, optionLabels, labelKey;
-  if (q.mode === "image-to-name") {
-    qMain.textContent = "What throw is this?";
-    hint.textContent = "Pick the correct Japanese name";
-    imageWrap.style.display = "grid";
-    imageWrap.classList.remove("error");
-    imageWrap.classList.add("loading");
-    img.onload = () => imageWrap.classList.remove("loading");
-    img.onerror = () => { imageWrap.classList.remove("loading"); imageWrap.classList.add("error"); };
-    img.src = IMG_BASE + t.img;
-    labelKey = x => x.name;
-    correctLabel = t.name;
-  } else if (q.mode === "english-to-name") {
-    qMain.textContent = `Which throw means "${t.english}"?`;
-    hint.textContent = "Pick the correct Japanese name";
-    imageWrap.style.display = "none";
-    labelKey = x => x.name;
-    correctLabel = t.name;
-  } else {
-    qMain.textContent = `What does "${t.name}" mean?`;
-    hint.textContent = "Pick the correct English meaning";
-    imageWrap.style.display = "none";
-    labelKey = x => x.english;
-    correctLabel = t.english;
-  }
-
-  const distractors = pickDistinct(THROWS, t, 3, labelKey);
-  const opts = shuffle([t, ...distractors]).map(labelKey);
-  q.currentCorrect = correctLabel;
-  q.currentOptions = opts;
-
-  // render option buttons
-  const optsHost = $("options");
-  optsHost.innerHTML = "";
-  opts.forEach((label, i) => {
-    const b = document.createElement("button");
-    b.className = "option";
-    b.innerHTML = `<span class="kbd">${i + 1}</span><span class="opt-label">${escapeHtml(label)}</span>`;
-    b.addEventListener("click", () => handleAnswer(b, label));
-    optsHost.appendChild(b);
-  });
-
-  // reset feedback / next
-  const fb = $("feedback");
-  fb.className = "feedback";
-  fb.textContent = "";
-  $("nextBtn").disabled = true;
-  q.answered = false;
-}
-
-function handleAnswer(btn, chosen) {
-  const q = state.quiz;
-  if (!q || q.answered) return;
-  q.answered = true;
-  const t = q.deck[q.qIndex];
-  const correct = chosen === q.currentCorrect;
-
-  // Highlight
-  const buttons = document.querySelectorAll(".option");
-  buttons.forEach(b => {
-    b.disabled = true;
-    const label = b.querySelector(".opt-label").textContent;
-    if (label === q.currentCorrect) b.classList.add("correct");
-    if (b === btn && !correct) b.classList.add("wrong");
-  });
-
-  // Score
-  if (correct) {
-    q.score += 1;
-    q.streak += 1;
-    q.bestStreak = Math.max(q.bestStreak, q.streak);
-  } else {
-    q.streak = 0;
-  }
-
-  // Result record
-  q.results.push({
-    name: t.name,
-    english: t.english,
-    belt: t.belt,
-    img: t.img,
-    mode: q.mode,
-    correct,
-    chosen,
-    correctAnswer: q.currentCorrect,
-    ts: Date.now()
-  });
-
-  // Per-throw stats
-  updateThrowStats(t.name, correct);
-
-  // Feedback
-  const fb = $("feedback");
-  if (correct) {
-    fb.className = "feedback show ok";
-    fb.innerHTML = `✔ Correct! <b>${escapeHtml(t.name)}</b> — <i>${escapeHtml(t.english)}</i>`;
-  } else {
-    fb.className = "feedback show no";
-    fb.innerHTML = `✖ The answer is <b>${escapeHtml(t.name)}</b> — <i>${escapeHtml(t.english)}</i>`;
-  }
-
-  // Stats line
-  $("score").textContent = q.score;
-  $("streak").textContent = q.streak;
-
-  $("nextBtn").disabled = false;
-  $("nextBtn").focus();
-}
-
-function updateThrowStats(name, correct) {
-  const ts = storage.get(KEY.throws, {});
-  if (!ts[name]) ts[name] = { seen: 0, correct: 0, lastSeen: 0 };
-  ts[name].seen += 1;
-  if (correct) ts[name].correct += 1;
-  ts[name].lastSeen = Date.now();
-  storage.set(KEY.throws, ts);
-}
-
-function nextQuestion() {
-  const q = state.quiz;
-  if (!q || !q.answered) return;
-  q.qIndex += 1;
-  q.answered = false;
-  if (q.qIndex >= q.deck.length) {
-    finishQuiz(false);
-    return;
-  }
-  renderQuestion();
-}
-
-function finishQuiz(partial) {
-  const q = state.quiz;
-  if (!q) return;
-  stopTimer();
-  const completedAt = Date.now();
-  const totalAnswered = q.results.length;
-
-  const entry = {
-    id: q.id,
-    completedAt,
-    durationMs: completedAt - q.startedAt,
-    mode: q.mode,
-    selectedBelts: q.selectedBelts,
-    total: partial ? totalAnswered : q.deck.length,
-    score: q.score,
-    bestStreak: q.bestStreak,
-    partial: !!partial && totalAnswered < q.deck.length,
-    results: q.results.slice()
-  };
-  // If partial with no answers, do not save a history entry
-  if (entry.total > 0) {
-    const hist = storage.get(KEY.history, []);
-    hist.unshift(entry);
-    storage.set(KEY.history, hist.slice(0, 200));
-  }
-
-  storage.del(KEY.current);
-  state.quiz = null;
-  renderSummary(entry);
-  showView("summary");
-}
-
-function renderSummary(entry) {
-  const total = entry.total;
-  const score = entry.score;
-  const acc = total ? score / total : 0;
-  const pct = Math.round(acc * 100);
-
-  $("finalScore").textContent = `${score} / ${total}`;
-  let msg = "Good effort — keep drilling!";
-  if (total === 0) msg = "Quiz ended early.";
-  else if (pct === 100) msg = "Flawless!";
-  else if (pct >= 85) msg = "Excellent — strong recall.";
-  else if (pct >= 70) msg = "Solid work.";
-  else if (pct >= 50) msg = "Getting there — another round will help.";
-  $("summaryLine").textContent = `${msg}${entry.partial ? " (ended early)" : ""}`;
-
-  $("m-acc").textContent = total ? pct + "%" : "—";
-  $("m-time").textContent = fmtDuration(entry.durationMs);
-  $("m-streak").textContent = entry.bestStreak || 0;
-  $("m-avg").textContent = total ? fmtDuration(entry.durationMs / total) : "—";
-
-  // Wrong list
-  const wrong = entry.results.filter(r => !r.correct);
-  const wrongPanel = $("wrongPanel");
-  const wrongList = $("wrongList");
-  if (!wrong.length) {
-    wrongPanel.hidden = true;
-  } else {
-    wrongPanel.hidden = false;
-    wrongList.innerHTML = "";
-    for (const r of wrong) {
-      const row = document.createElement("div");
-      row.className = "wrong-row";
-      const showImg = r.mode === "image-to-name" || r.img;
-      row.innerHTML = `
-        ${showImg
-          ? `<img class="thumb" src="${escapeHtml(r.img)}" alt="${escapeHtml(r.name)}" />`
-          : `<div class="thumb-placeholder">no image</div>`}
-        <div>
-          <div class="name">${escapeHtml(r.name)} <span class="muted small">— ${escapeHtml(r.english)}</span></div>
-          <div class="muted small">${escapeHtml(BELT_GROUP[r.belt])} · ${MODE_LABEL[r.mode] || r.mode}</div>
-          <div class="what-i-said">You said <b>${escapeHtml(r.chosen)}</b> · correct: <b>${escapeHtml(r.correctAnswer)}</b></div>
+  <!-- ═══════════════ CONFIRM DIALOG ═══════════════ -->
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-backdrop" id="confirmBackdrop"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(420px,100%);">
+      <div class="modal-header"><h2 id="confirmTitle">Are you sure?</h2></div>
+      <div class="modal-body">
+        <p id="confirmMessage" style="margin-top:0;"></p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn ghost" id="confirmCancelBtn">Cancel</button>
+          <button class="btn" id="confirmOkBtn">Confirm</button>
         </div>
-      `;
-      wrongList.appendChild(row);
-    }
-  }
-  $("retryWrongBtn").hidden = wrong.length === 0;
-  // store last wrong subset on the button for easy retry
-  $("retryWrongBtn").dataset.ids = JSON.stringify(wrong.map(r => r.name));
-}
-
-function retryWrongOnly() {
-  const names = JSON.parse($("retryWrongBtn").dataset.ids || "[]");
-  if (!names.length) return;
-  const pool = THROWS.filter(t => names.includes(t.name));
-  startQuiz({ deck: shuffle(pool) });
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   History modal
-═══════════════════════════════════════════════════════════════ */
-function openHistoryList() {
-  const hist = storage.get(KEY.history, []);
-  $("modalTitle").textContent = `Test History (${hist.length})`;
-  const body = $("modalBody");
-  if (!hist.length) {
-    body.innerHTML = `<div class="empty-note">No tests yet.</div>`;
-  } else {
-    body.innerHTML = "";
-    for (const h of hist) {
-      const acc = Math.round((h.score / h.total) * 100);
-      const cls = acc >= 80 ? "good" : acc >= 60 ? "mid" : "bad";
-      const row = document.createElement("div");
-      row.className = "history-row";
-      row.innerHTML = `
-        <div class="history-score ${cls}">${acc}%</div>
-        <div class="history-meta">
-          <div><b>${h.score} / ${h.total}</b> · ${MODE_LABEL[h.mode] || h.mode}</div>
-          <div class="when">${new Date(h.completedAt).toLocaleString()} · ${fmtDuration(h.durationMs)}${h.partial ? " · partial" : ""}</div>
-        </div>
-        <div class="history-actions">›</div>
-      `;
-      row.addEventListener("click", () => openHistoryDetail(h.id));
-      body.appendChild(row);
-    }
-  }
-  $("historyModal").hidden = false;
-}
-
-function openHistoryDetail(id) {
-  const hist = storage.get(KEY.history, []);
-  const h = hist.find(x => x.id === id);
-  if (!h) return openHistoryList();
-
-  const acc = Math.round((h.score / h.total) * 100);
-  $("modalTitle").textContent = `Test detail · ${new Date(h.completedAt).toLocaleString()}`;
-  const body = $("modalBody");
-  body.innerHTML = `
-    <div class="history-detail-meta">
-      <div class="metric"><span>Score</span><b>${h.score}/${h.total} (${acc}%)</b></div>
-      <div class="metric"><span>Mode</span><b>${MODE_LABEL[h.mode] || h.mode}</b></div>
-      <div class="metric"><span>Time</span><b>${fmtDuration(h.durationMs)}</b></div>
-      <div class="metric"><span>Best Streak</span><b>${h.bestStreak || 0}</b></div>
-    </div>
-    <div id="qaList"></div>
-    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-      <button class="btn ghost" data-close>Close</button>
-      <button class="btn danger" id="deleteEntryBtn">Delete</button>
-    </div>
-  `;
-  const qaList = body.querySelector("#qaList");
-  for (const r of h.results) {
-    const row = document.createElement("div");
-    row.className = "qa-row";
-    row.innerHTML = `
-      <div class="ind ${r.correct ? "ok" : "no"}">${r.correct ? "✓" : "✗"}</div>
-      <div>
-        <div class="qa-name">${escapeHtml(r.name)} <span class="muted small">· ${escapeHtml(r.english)}</span></div>
-        <div class="qa-sub">${escapeHtml(BELT_GROUP[r.belt])}${r.correct ? "" : ` · you said <b>${escapeHtml(r.chosen)}</b>`}</div>
       </div>
-      <div class="qa-pill">${MODE_LABEL[r.mode] || r.mode}</div>
-    `;
-    qaList.appendChild(row);
-  }
-  body.querySelector("#deleteEntryBtn").addEventListener("click", () => {
-    if (!confirm("Delete this test from history?")) return;
-    const next = storage.get(KEY.history, []).filter(x => x.id !== id);
-    storage.set(KEY.history, next);
-    refreshHome();
-    openHistoryList();
-  });
-  $("historyModal").hidden = false;
-}
+    </div>
+  </div>
 
-function closeModal() { $("historyModal").hidden = true; }
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <canvas id="confettiCanvas" hidden aria-hidden="true"></canvas>
 
-/* ═══════════════════════════════════════════════════════════════
-   Quit / home from quiz
-═══════════════════════════════════════════════════════════════ */
-function goHomeFromQuiz() {
-  stopTimer();
-  state.quiz = null;
-  clearInProgressStorage();
-  showView("home");
-}
-
-function endNow() {
-  if (!state.quiz) return;
-  if (state.quiz.results.length === 0) {
-    if (!confirm("End the quiz? You haven't answered any questions yet — nothing will be saved to history.")) return;
-    storage.del(KEY.current);
-    state.quiz = null;
-    stopTimer();
-    showView("home");
-    return;
-  }
-  if (!confirm("End the quiz now? It will be saved to history as a partial test.")) return;
-  finishQuiz(true);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Reset all
-═══════════════════════════════════════════════════════════════ */
-function resetAll() {
-  if (!confirm("Erase all stats and history? This cannot be undone.")) return;
-  storage.del(KEY.current);
-  storage.del(KEY.history);
-  storage.del(KEY.throws);
-  storage.del(KEY.prefs);
-  state.quiz = null;
-  state.selectedBelts = new Set(BELT_ORDER);
-  state.mode = "image-to-name";
-  state.length = "all";
-  $("lengthSelect").value = "all";
-  document.querySelectorAll("[data-mode]").forEach(c => c.classList.toggle("active", c.dataset.mode === state.mode));
-  renderBeltChips();
-  refreshHome();
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Wiring
-═══════════════════════════════════════════════════════════════ */
-function wire() {
-  $("startBtn").addEventListener("click", () => startQuiz());
-  $("selectAllBtn").addEventListener("click", () => {
-    state.selectedBelts = new Set(BELT_ORDER);
-    renderBeltChips(); savePrefs();
-  });
-  $("clearBtn").addEventListener("click", () => {
-    state.selectedBelts = new Set();
-    renderBeltChips(); savePrefs();
-  });
-  $("lengthSelect").addEventListener("change", (e) => { state.length = e.target.value; savePrefs(); });
-
-  $("homeBtn").addEventListener("click", goHomeFromQuiz);
-  $("nextBtn").addEventListener("click", nextQuestion);
-  $("quitBtn").addEventListener("click", endNow);
-
-  $("restartBtn").addEventListener("click", () => startQuiz());
-  $("retryWrongBtn").addEventListener("click", retryWrongOnly);
-  $("backBtn").addEventListener("click", () => showView("home"));
-
-  $("historyBtn").addEventListener("click", openHistoryList);
-  $("viewAllHistoryBtn").addEventListener("click", openHistoryList);
-  $("resetAllBtn").addEventListener("click", resetAll);
-
-  // Modal close handlers
-  $("historyModal").addEventListener("click", (e) => {
-    if (e.target.matches("[data-close], [data-close] *")) closeModal();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-    if (state.view !== "quiz") return;
-    if (["1","2","3","4"].includes(e.key)) {
-      const i = parseInt(e.key, 10) - 1;
-      const btns = document.querySelectorAll(".option");
-      if (btns[i] && !btns[i].disabled) btns[i].click();
-    } else if (e.key === "Enter" || e.key === " ") {
-      const nb = $("nextBtn");
-      if (!nb.disabled) { e.preventDefault(); nb.click(); }
-    }
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Init
-═══════════════════════════════════════════════════════════════ */
-function init() {
-  loadPrefs();        // load state from storage first
-  renderBeltChips();  // chips reflect loaded selection
-  wireModeRow();
-  wire();
-  showView("home");
-}
-init();
-</script>
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
