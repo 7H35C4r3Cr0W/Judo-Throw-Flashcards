@@ -47,31 +47,38 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - Mark cards **✓ I know this** / **↻ Needs review** — marks feed the spaced-repetition scheduler
 - Filter by belt group, search, or show only cards that are **due**, **flagged**, or **unseen**
 
-### 🎯 Quiz — four modes
-| Mode | You see | You pick |
+### 🎯 Quiz — five modes
+| Mode | You see | You answer |
 |---|---|---|
-| 🎬 **Visual** | The throw animation | The Japanese name |
-| 📖 **EN → JP** | English meaning | The Japanese name |
-| 🈶 **JP → EN** | Japanese name | The English meaning |
+| 🎬 **Visual** | The throw animation | Pick the Japanese name |
+| 📖 **EN → JP** | English meaning | Pick the Japanese name |
+| 🈶 **JP → EN** | Japanese name | Pick the English meaning |
+| ⌨️ **Type It** | The throw animation | **Type** the name — no options, forgiving spelling |
 | 🧠 **Smart Drill** | Mixed questions | Due + weakest throws first |
 
 - **Smart distractors** — wrong options are drawn from *confusable* throws (Osoto Gari vs Osoto Guruma vs Osoto Otoshi…), not random picks
+- **Hints** (`H`) — first the name's shape (`O____ G___`), then more letters plus a 50/50 that greys out two wrong options
 - Pause/replay the animation (also auto-pauses under `prefers-reduced-motion`)
 - Optional auto-advance on correct answers, streak tracking, per-question feedback with kanji
 - Answers update the spaced-repetition schedule automatically
 
 ### 🗂 Library
 - All 47 throws grouped by belt, searchable by romaji, kanji, English, or group
-- Tap any throw for the full animation, names, and your personal stats
+- Tap any throw for the full animation, names, pronunciation, and your personal stats
+- Per-belt **mastery bars** show how much of each group you've locked in
 
 ### 🔁 Spaced repetition (Leitner)
 - 5 boxes with 0/1/3/7/14-day intervals; correct answers promote, misses demote
 - The home screen shows how many throws are **due for review** — one tap starts a Smart Drill
+- A **day-streak** counter rewards showing up (any finished quiz or study mark counts)
 
 ### 📊 Progress
 - Test history with per-question breakdowns, lifetime accuracy, mastered count, best streak
 - "Throws to Focus On" — your weakest throws, with a one-tap **🎯 Drill these**
 - **Export / import** all data as JSON from the History dialog (your stats aren't hostage to one browser)
+
+### 🔊 Pronunciation
+- "Say it" buttons speak each throw's name using your device's built-in speech (a Japanese voice reads the kanji when available) — no downloads, works offline
 
 ### Design & accessibility
 - Dark **sumi-ink** and light **washi-paper** themes (follows your system, toggleable)
@@ -90,6 +97,8 @@ Everything is local. No analytics, no server calls. Data lives in `localStorage`
 | `?` | Show shortcuts |
 | `Esc` | Close dialog |
 | `1–4` | Pick an answer (quiz) |
+| `H` | Hint — press twice for 50/50 (quiz) |
+| `T` | Toggle dark / light theme |
 | `Enter` / `Space` | Next question (quiz) |
 | `←` `→` | Previous / next card (study) |
 | `Space` / `F` | Flip card (study) |
