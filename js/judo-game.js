@@ -230,6 +230,13 @@
           setTimeout(function () { tone(fr, fr, 0.22, 0.09, "square"); }, d);
         })(f[i], i * 95);
       },
+      // falsetto "toas-tyyy!" squeal — an arcade-classic homage, fully synthesized
+      toasty: function () {
+        noise(0.03, 0.05, 3200, 2);
+        tone(880, 1500, 0.12, 0.09, "triangle");
+        setTimeout(function () { tone(1250, 1900, 0.2, 0.1, "triangle"); }, 110);
+        setTimeout(function () { tone(1900, 1350, 0.14, 0.05, "sine"); }, 320);
+      },
       flub: function () { tone(240, 130, 0.5, 0.07, "sawtooth"); },
       rankup: function () {
         var f = [392, 523.25, 659.25, 783.99, 1046.5];
@@ -530,6 +537,13 @@
     /* ── referee (screen-space, pops up to give the call) ── */
     var ref = { vis: 0, arm: 0, armTarget: 0, mode: "none" }; // arm: 0 down, 1 side, 2 up, 3 head-scratch
 
+    /* ── "TOASTY!" corner cameo for near-perfect throws ── */
+    var toastyT = -1;   // <0 idle; else seconds since trigger
+    function triggerToasty() {
+      toastyT = 0;
+      audio.toasty();
+    }
+
     /* ═══════════ HUD helpers ═══════════ */
 
     function beltForIppons(n) {
@@ -722,6 +736,9 @@
         spawnConfetti(uke.x);
         if (!reducedMotion) { shakeT = 0.45; shakeAmp = 7; }
         toriFace = "happy"; setPose(toriTarget, "proud");
+        // near-perfect throws earn the corner cameo — always on a golden
+        // (dead-center) ippon, occasionally on the rest, arcade-style
+        if (uke.golden || Math.random() < 0.12) setTimeout(triggerToasty, 420);
       } else if (verdict === "waza") {
         audio.ding();
         toriFace = "happy"; setPose(toriTarget, "proud");
@@ -882,6 +899,12 @@
       var refVisTarget = ref.mode === "none" ? 0 : 1;
       ref.vis = lerp(ref.vis, refVisTarget, 1 - Math.pow(0.001, dt));
       ref.arm = lerp(ref.arm, ref.armTarget, 1 - Math.pow(0.004, dt));
+
+      // toasty cameo timeline
+      if (toastyT >= 0) {
+        toastyT += dt;
+        if (toastyT > 1.1) toastyT = -1;
+      }
     }
 
     /* ═══════════ Drawing ═══════════ */
@@ -915,6 +938,7 @@
       drawReferee();
       drawVignette();
       drawPetals(false);
+      drawToasty();
     }
 
     function drawBackdrop() {
@@ -1331,6 +1355,68 @@
       g.restore();
     }
 
+    /* ── toasty cameo: a grinning face slides in from the corner ── */
+    function drawToasty() {
+      if (toastyT < 0) return;
+      var IN = 0.16, HOLD = 0.62, OUT = 0.28;
+      var p;
+      if (toastyT < IN) p = toastyT / IN;
+      else if (toastyT < IN + HOLD) p = 1;
+      else p = Math.max(0, 1 - (toastyT - IN - HOLD) / OUT);
+      var ease = p * p * (3 - 2 * p);   // smoothstep
+      var r = clamp(scale * 0.85, 36, 60);
+      var cx, cy;
+      g.save();
+      if (reducedMotion) {              // fade in place instead of sliding
+        cx = W - r * 1.1; cy = H - r * 1.1;
+        g.globalAlpha = ease;
+      } else {
+        cx = W - r * 1.1 + (1 - ease) * r * 2.8;
+        cy = H - r * 1.1 + (1 - ease) * r * 2.8;
+      }
+      g.translate(cx, cy);
+      g.rotate(-0.2 * ease);
+      g.lineCap = "round";
+
+      // head
+      g.fillStyle = "#e8c49a";
+      g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill();
+      // swooshy hair
+      g.fillStyle = "#4c3a2c";
+      g.beginPath(); g.arc(0, 0, r, Math.PI * 0.9, Math.PI * 2.12); g.fill();
+      g.beginPath();
+      g.ellipse(r * 0.35, -r * 0.62, r * 0.42, r * 0.26, -0.5, 0, Math.PI * 2);
+      g.fill();
+      // squinty delighted eyes (^ ^)
+      g.strokeStyle = "#2a2320";
+      g.lineWidth = r * 0.09;
+      g.beginPath(); g.arc(-r * 0.36, -r * 0.05, r * 0.16, Math.PI * 1.15, Math.PI * 1.85); g.stroke();
+      g.beginPath(); g.arc(r * 0.36, -r * 0.05, r * 0.16, Math.PI * 1.15, Math.PI * 1.85); g.stroke();
+      // huge open grin with a tooth line
+      g.fillStyle = "#2a2320";
+      g.beginPath();
+      g.ellipse(0, r * 0.42, r * 0.42, r * 0.3, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = "#fff";
+      g.beginPath();
+      g.ellipse(0, r * 0.31, r * 0.34, r * 0.12, 0, 0, Math.PI * 2);
+      g.fill();
+      // blush
+      g.fillStyle = "rgba(224,122,122,0.5)";
+      g.beginPath(); g.arc(-r * 0.62, r * 0.22, r * 0.13, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc(r * 0.62, r * 0.22, r * 0.13, 0, Math.PI * 2); g.fill();
+
+      // the word itself
+      g.font = "800 " + Math.round(r * 0.52) + "px " + pal.fontDisplay;
+      g.textAlign = "right";
+      g.lineWidth = r * 0.14;
+      g.strokeStyle = "rgba(0,0,0,0.55)";
+      g.strokeText("TOASTY!", -r * 1.15, -r * 0.35);
+      g.fillStyle = "#ffe9b8";
+      g.fillText("TOASTY!", -r * 1.15, -r * 0.35);
+      g.restore();
+    }
+
     /* ── particles & atmosphere ── */
     function drawParticles() {
       var i, p, sx, sy;
@@ -1499,7 +1585,7 @@
       step(dt || 0.016);
       // full rate only while something fast is happening; idle scenes
       // (breathing, petals) throttle to ~30fps to save phone batteries
-      var busy = state === ST.CHARGING || state === ST.FLIGHT ||
+      var busy = state === ST.CHARGING || state === ST.FLIGHT || toastyT >= 0 ||
         shakeT > 0 || confetti.length > 0 || dust.length > 0 || stars.length > 0;
       var interval = busy ? 0 : (reducedMotion ? 90 : 33);
       if (needDraw || !interval || ts - lastDrawTs >= interval) {
