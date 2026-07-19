@@ -1599,3 +1599,59 @@ button.focus-row:hover, button.wrong-row:hover {
   text-decoration: none;
 }
 .made-by a:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Ippon Toss mini-game — host-side chrome + token mapping.
+   The game itself (js/judo-game.js) styles its internals through
+   these --jg-* variables, so it follows the site theme.
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --jg-accent: var(--accent);
+  --jg-accent-text: var(--accent-text);
+  --jg-surface: var(--panel);
+  --jg-text: var(--text);
+  --jg-muted: var(--muted);
+  --jg-border: var(--border);
+  --jg-radius: var(--radius);
+  --jg-gold: #c9a25a;
+  --jg-font-body: var(--font-body);
+  --jg-font-display: var(--font-display);
+  --jg-shadow: var(--shadow-md);
+}
+
+/* washi light theme: gold darkens to stay readable, matching the
+   site's own --belt-yellow convention */
+[data-theme="light"] {
+  --jg-gold: #8a6b2f;
+}
+
+.game-section { margin-top: 18px; }
+.game-head { margin-bottom: 12px; }
+.game-eyebrow {
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.game-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  margin: 0 0 4px;
+}
+.game-title-jp {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.game-sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 0;
+  max-width: 640px;
+}

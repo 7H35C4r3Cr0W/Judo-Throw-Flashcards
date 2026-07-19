@@ -1590,12 +1590,14 @@
     $("eraseAllBtn").addEventListener("click", function () {
       showConfirm({
         title: "Erase all data?",
-        message: "All stats, history, and spaced-repetition progress will be permanently deleted.",
+        message: "All stats, history, spaced-repetition progress, and mini-game progress will be permanently deleted.",
         okLabel: "Erase everything",
         danger: true
       }).then(function (yes) {
         if (!yes) return;
         Object.keys(KEY).forEach(function (k) { storage.del(KEY[k]); });
+        // the Ippon Toss mini-game keeps its own store — a full erase must take it too
+        try { localStorage.removeItem("judoGame.ipponToss.v1"); } catch (e) { /* fine */ }
         state.selectedBelts = new Set(BELT_ORDER);
         state.mode = "image-to-name";
         state.length = "10";

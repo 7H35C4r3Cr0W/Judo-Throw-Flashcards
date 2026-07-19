@@ -2,7 +2,7 @@
    so it works fully offline after the first visit.
    Bump CACHE_VERSION whenever any precached file changes. */
 
-var CACHE_VERSION = "judo-v2.1.1";
+var CACHE_VERSION = "judo-v2.2.0";
 
 var APP_SHELL = [
   "./",
@@ -11,6 +11,7 @@ var APP_SHELL = [
   "js/data.js",
   "js/core.js",
   "js/app.js",
+  "js/judo-game.js",
   "manifest.webmanifest",
   "icons/icon.svg",
   "icons/icon-192.png",

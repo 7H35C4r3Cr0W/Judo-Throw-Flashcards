@@ -90,6 +90,15 @@ Everything is local. No analytics, no server calls. Data lives in `localStorage`
 
 ---
 
+### 🕹️ Ippon Toss — a silly mini-game
+- **Dojo break** on the Home screen: hold to break uke's balance, release in the
+  glowing zone, and send them ragdolling across the tatami
+- Referee calls — **IPPON! / WAZA-ARI! / YUKO / MATTE** — with confetti, dust,
+  and a very dizzy uke
+- Every throw is named after one of the real 47 (kanji included), and you earn
+  belt ranks one ippon at a time (progress saved locally)
+- Works with touch, mouse, or **Space** — and it never traps page scrolling on mobile
+
 ## Keyboard shortcuts
 
 | Key | Action |
