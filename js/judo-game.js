@@ -537,11 +537,43 @@
     /* ── referee (screen-space, pops up to give the call) ── */
     var ref = { vis: 0, arm: 0, armTarget: 0, mode: "none" }; // arm: 0 down, 1 side, 2 up, 3 head-scratch
 
-    /* ── "TOASTY!" corner cameo for near-perfect throws ── */
+    /* ── "TOASTY!" corner cameo for near-perfect throws ──
+       Drop real assets next to the page — toasty.jpg (or .png) and
+       toasty.mp3 (or .ogg/.wav) — and the cameo uses them automatically.
+       Without them it falls back to the drawn face + synth squeal. */
     var toastyT = -1;   // <0 idle; else seconds since trigger
+    var toastyImg = null, toastyAudio = null;
+    (function loadToastyAssets() {
+      var imgs = ["toasty.jpg", "toasty.png"];
+      var auds = ["toasty.mp3", "toasty.ogg", "toasty.wav"];
+      (function tryImg(i) {
+        if (i >= imgs.length) return;
+        var im = new Image();
+        im.onload = function () { toastyImg = im; };
+        im.onerror = function () { tryImg(i + 1); };
+        im.src = imgs[i];
+      })(0);
+      (function tryAud(i) {
+        if (i >= auds.length) return;
+        var a = document.createElement("audio");
+        a.preload = "auto";
+        a.oncanplaythrough = function () { toastyAudio = a; };
+        a.onerror = function () { tryAud(i + 1); };
+        a.src = auds[i];
+      })(0);
+    })();
     function triggerToasty() {
       toastyT = 0;
-      audio.toasty();
+      if (toastyAudio && !save.muted) {
+        try {
+          toastyAudio.currentTime = 0;
+          toastyAudio.volume = 0.7;
+          var p = toastyAudio.play();
+          if (p && p.catch) p.catch(function () { audio.toasty(); });
+        } catch (e) { audio.toasty(); }
+      } else {
+        audio.toasty();   // no-ops when muted
+      }
     }
 
     /* ═══════════ HUD helpers ═══════════ */
@@ -1377,6 +1409,15 @@
       g.translate(cx, cy);
       g.rotate(-0.2 * ease);
       g.lineCap = "round";
+
+      // the real deal, if the site provides it
+      if (toastyImg) {
+        var iw = r * 2.3;
+        var ih = iw * (toastyImg.height / toastyImg.width || 1);
+        g.drawImage(toastyImg, -iw / 2, -ih / 2, iw, ih);
+        g.restore();
+        return;
+      }
 
       // head
       g.fillStyle = "#e8c49a";
