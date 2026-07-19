@@ -1,6 +1,6 @@
 # 柔 Judo Throws — Flashcards & Quiz
 
-Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, four quiz modes, spaced repetition, and a full technique library. Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
+Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, and a full technique library. Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
 
 **Live app → https://7h35c4r3cr0w.github.io/Judo-Throw-Flashcards/**
 

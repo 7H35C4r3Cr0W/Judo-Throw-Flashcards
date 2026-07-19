@@ -2,7 +2,7 @@
    so it works fully offline after the first visit.
    Bump CACHE_VERSION whenever any precached file changes. */
 
-var CACHE_VERSION = "judo-v2.1.0";
+var CACHE_VERSION = "judo-v2.1.1";
 
 var APP_SHELL = [
   "./",
@@ -15,6 +15,7 @@ var APP_SHELL = [
   "icons/icon.svg",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  "icons/icon-512-maskable.png",
   "kano_jigoro.jpg"
 ];
 
@@ -93,7 +94,9 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (key) {
-        if (key !== CACHE_VERSION) return caches.delete(key);
+        // Cache Storage is origin-wide — on *.github.io the origin is shared
+        // with every other project site, so only touch our own "judo-" caches
+        if (key.indexOf("judo-") === 0 && key !== CACHE_VERSION) return caches.delete(key);
       }));
     }).then(function () { return self.clients.claim(); })
   );
@@ -114,18 +117,28 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
+  // cache queries under the bare URL so cache-busting params (?r=) can't
+  // pile up duplicate entries — reads already ignoreSearch
+  var bareUrl = url.origin + url.pathname;
+
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then(function (cached) {
-      if (cached) return cached;
-      return fetch(freshRequest(req.url)).then(function (res) {
+      var revalidate = fetch(freshRequest(bareUrl)).then(function (res) {
         if (res && res.ok) {
           var copy = res.clone();
           caches.open(CACHE_VERSION)
-            .then(function (cache) { return cache.put(req, copy); })
+            .then(function (cache) { return cache.put(bareUrl, copy); })
             .catch(function () {}); // storage pressure — serving still works
         }
         return res;
-      }).catch(function () { return Response.error(); });
+      });
+      if (cached) {
+        // stale-while-revalidate: even if a CACHE_VERSION bump is forgotten,
+        // clients converge on fresh assets one load later
+        event.waitUntil(revalidate.catch(function () {}));
+        return cached;
+      }
+      return revalidate.catch(function () { return Response.error(); });
     })
   );
 });
