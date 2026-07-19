@@ -110,13 +110,16 @@
       query: "",
       filter: "all",
       front: prefs.studyFront,
-      shuffled: false
+      shuffled: false,
+      paused: reducedMotion.matches // reduced-motion users start with GIFs frozen
     },
     libraryQuery: ""
   };
 
   var timerHandle = null;
   var autoNextHandle = null;
+  var pendingSWReload = false; // an SW update arrived mid-quiz; reload later
+  var swDeferredReload = null;
 
   function savePrefs() {
     storage.set(KEY.prefs, {
@@ -259,6 +262,12 @@
   }
 
   function showView(v) {
+    // a deferred SW-update reload can now run safely (not mid-quiz/summary)
+    if (pendingSWReload && (v === "home" || v === "study" || v === "library") && swDeferredReload) {
+      pendingSWReload = false;
+      swDeferredReload();
+      return;
+    }
     state.view = v;
     VIEWS.forEach(function (name) { $(name + "View").hidden = name !== v; });
     setCurrentTab("tabHome", v === "home" || v === "quiz" || v === "summary");
@@ -317,6 +326,9 @@
           renderBeltChips();
           updateStartButton();
           if (state.view === "study") refreshStudy();
+          // the re-render replaced this chip — put focus back on its successor
+          var again = host.children[BELT_ORDER.indexOf(belt)];
+          if (again) again.focus();
         });
         host.appendChild(btn);
       });
@@ -328,7 +340,19 @@
   function renderModeCards() {
     var host = $("modeRow");
     host.innerHTML = "";
-    Object.keys(MODES).forEach(function (key) {
+    var keys = Object.keys(MODES);
+
+    function select(key) {
+      state.mode = key;
+      savePrefs();
+      host.querySelectorAll(".mode-card").forEach(function (c) {
+        var on = c.dataset.mode === key;
+        c.setAttribute("aria-checked", String(on));
+        c.tabIndex = on ? 0 : -1; // roving tabindex: one tab stop for the group
+      });
+    }
+
+    keys.forEach(function (key) {
       var m = MODES[key];
       var btn = document.createElement("button");
       btn.className = "mode-card";
@@ -336,18 +360,25 @@
       // single-select group → radio semantics, not independent toggles
       btn.setAttribute("role", "radio");
       btn.setAttribute("aria-checked", String(state.mode === key));
+      btn.tabIndex = state.mode === key ? 0 : -1;
       btn.innerHTML =
         '<span class="mode-icon" aria-hidden="true">' + m.icon + "</span>" +
         '<span class="mode-title">' + esc(m.title) + "</span>" +
         '<span class="mode-desc">' + esc(m.desc) + "</span>";
-      btn.addEventListener("click", function () {
-        state.mode = key;
-        savePrefs();
-        host.querySelectorAll(".mode-card").forEach(function (c) {
-          c.setAttribute("aria-checked", String(c.dataset.mode === key));
-        });
-      });
+      btn.addEventListener("click", function () { select(key); });
       host.appendChild(btn);
+    });
+
+    // radios move selection with arrow keys (WAI-ARIA radiogroup pattern)
+    host.addEventListener("keydown", function (e) {
+      var dir = (e.key === "ArrowRight" || e.key === "ArrowDown") ? 1 :
+                (e.key === "ArrowLeft" || e.key === "ArrowUp") ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      var next = keys[(keys.indexOf(state.mode) + dir + keys.length) % keys.length];
+      select(next);
+      var el = host.querySelector('[data-mode="' + next + '"]');
+      if (el) el.focus();
     });
   }
 
@@ -524,6 +555,7 @@
   /* GIF pause/replay controls (WCAG 2.2.2: pause, stop, hide) */
   var gifPaused = false;
   var pauseCanvas = null;
+  var userReplayed = false; // explicit replay overrides the reduced-motion auto-pause once
 
   function ensureMediaControls() {
     var wrap = $("imageWrap");
@@ -537,7 +569,11 @@
     $("replayBtn").addEventListener("click", function () {
       var img = $("throwImage");
       unpauseGif();
-      img.src = img.src; // same-value assignment restarts the GIF
+      userReplayed = true;
+      // same-value src reassignment doesn't reliably restart a GIF everywhere;
+      // a cache-busting query does, and the SW matches it with ignoreSearch
+      var base = (img.getAttribute("src") || "").split("?")[0];
+      if (base) img.src = base + "?r=" + Date.now();
     });
     $("pauseBtn").addEventListener("click", function () {
       if (gifPaused) unpauseGif(); else pauseGif();
@@ -553,8 +589,9 @@
     try {
       pauseCanvas.getContext("2d").drawImage(img, 0, 0);
     } catch (e) { pauseCanvas = null; return; }
-    pauseCanvas.className = img.className;
-    pauseCanvas.style.cssText = "max-width:100%;max-height:420px;border-radius:10px;background:var(--card-face);padding:6px;";
+    // .gif-frame shares the img's sizing rules in CSS, so the frozen
+    // frame occupies exactly the same box as the animation it replaces
+    pauseCanvas.className = "gif-frame" + (img.className ? " " + img.className : "");
     img.style.display = "none";
     img.insertAdjacentElement("afterend", pauseCanvas);
     gifPaused = true;
@@ -635,7 +672,9 @@
       if (token !== quizImgToken) return;
       clearQuizImgTimers();
       imageWrap.classList.remove("loading");
-      if (reducedMotion.matches) pauseGif(); // WCAG: no autoplaying motion
+      // WCAG: no autoplaying motion — but an explicit replay is a request for it
+      if (reducedMotion.matches && !userReplayed) pauseGif();
+      userReplayed = false;
     };
     img.onerror = function () {
       if (!img.getAttribute("src")) return; // ignore programmatic src clears
@@ -646,6 +685,44 @@
     // manual retry from the error state resets the backoff budget
     var retryBtn = $("imgRetryBtn");
     if (retryBtn) retryBtn.onclick = function () { attempt = 0; tryLoad(); };
+  }
+
+  /* WCAG 2.2.2 outside the quiz: every looping GIF needs a way to stop.
+     Freezing = hide the img and insert a first-frame canvas beside it
+     (drawImage of an animated img yields frame 1), so it can be undone. */
+  function gifFrozen(img) {
+    var next = img && img.nextElementSibling;
+    return !!(next && next.tagName === "CANVAS" && next.classList.contains("gif-frame"));
+  }
+
+  function freezeGifElement(img) {
+    if (!img || !img.isConnected || !img.naturalWidth || gifFrozen(img)) return;
+    var c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    try { c.getContext("2d").drawImage(img, 0, 0); } catch (e) { return; }
+    c.className = "gif-frame " + img.className;
+    c.setAttribute("role", "img");
+    if (img.alt) c.setAttribute("aria-label", img.alt);
+    img.style.display = "none";
+    img.insertAdjacentElement("afterend", c);
+  }
+
+  function unfreezeGifElement(img) {
+    if (!img) return;
+    if (gifFrozen(img)) img.nextElementSibling.remove();
+    img.style.display = "";
+  }
+
+  /* freeze now if loaded, else as soon as it loads */
+  function freezeGifWhenReady(img) {
+    if (!img) return;
+    if (img.complete && img.naturalWidth) freezeGifElement(img);
+    else img.addEventListener("load", function () { freezeGifElement(img); }, { once: true });
+  }
+
+  function freezeGifIfReduced(img) {
+    if (img && reducedMotion.matches) freezeGifWhenReady(img);
   }
 
   /* Retry-once-then-placeholder for images outside the quiz flow
@@ -718,6 +795,13 @@
       hint.textContent = "Pick the correct English meaning";
       imageWrap.style.display = "none";
       labelKey = function (x) { return x.english; };
+    }
+    if (!isVisual && !isType) {
+      // text question: a GIF watchdog from the previous visual question
+      // must not fire a pointless retry against the hidden image
+      quizImgToken += 1;
+      clearQuizImgTimers();
+      imageWrap.classList.remove("loading", "error");
     }
     q.currentLabelKey = labelKey;
 
@@ -905,6 +989,7 @@
       "</span>";
     var sp = $("fbSpeakBtn");
     if (sp) sp.addEventListener("click", function () { speakThrow(t); });
+    freezeGifIfReduced(fb.querySelector(".fb-thumb"));
 
     // after answering, the alt text may reveal the throw
     $("throwImage").alt = "Animation of " + t.name;
@@ -1076,6 +1161,8 @@
       row.addEventListener("click", function () { openThrowDetail(r.name); });
       wrongList.appendChild(row);
     });
+    // a long wrong-list is a wall of looping GIFs — honor reduced motion here too
+    wrongList.querySelectorAll("img.thumb").forEach(freezeGifIfReduced);
 
     $("retryWrongBtn").hidden = wrong.length === 0;
     $("retryWrongBtn").dataset.names = JSON.stringify(wrong.map(function (r) { return r.name; }));
@@ -1232,9 +1319,11 @@
 
     card.classList.toggle("flipped", s.flipped);
     card.setAttribute("aria-label", cardLabel(t, s, count));
+    announceStudy(cardLabel(t, s, count));
 
     attachImgRetry(front.querySelector("img.throw-gif"));
     attachImgRetry(back.querySelector("img.throw-gif"));
+    applyStudyGifState();
 
     var srs = getSrs()[t.name];
     $("knowBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "known")));
@@ -1271,6 +1360,25 @@
     return "Card " + count + ": " + front + " — press to flip";
   }
 
+  /* aria-label changes on an already-focused element aren't re-announced —
+     mirror card state into a polite live region so flips/moves are heard */
+  function announceStudy(text) {
+    var live = $("studyLive");
+    if (live) live.textContent = text;
+  }
+
+  /* study pause toggle (and the reduced-motion default) — freezes whatever
+     GIFs the current card carries; a fresh render animates again unless paused */
+  function applyStudyGifState() {
+    var card = $("flashcard");
+    var imgs = card.querySelectorAll("img.throw-gif");
+    imgs.forEach(state.study.paused ? freezeGifWhenReady : unfreezeGifElement);
+    var b = $("studyPauseBtn");
+    b.setAttribute("aria-pressed", String(state.study.paused));
+    b.setAttribute("aria-label", state.study.paused ? "Play animations" : "Pause animations");
+    b.querySelector("span").textContent = state.study.paused ? "▶" : "⏸";
+  }
+
   function flipCard() {
     var s = state.study;
     if (!s.deck.length) return;
@@ -1278,8 +1386,10 @@
     // toggle without re-rendering faces so the GIF doesn't restart mid-flip
     var card = $("flashcard");
     var t = s.deck[s.index];
+    var label = cardLabel(t, s, (s.index + 1) + " / " + s.deck.length);
     card.classList.toggle("flipped", s.flipped);
-    card.setAttribute("aria-label", cardLabel(t, s, (s.index + 1) + " / " + s.deck.length));
+    card.setAttribute("aria-label", label);
+    announceStudy(label);
   }
 
   /* jump between cards without animating the un-flip */
@@ -1419,6 +1529,7 @@
       : "not scheduled";
     openModal(t.name, (
       '<div class="detail-hero"><span class="belt-badge">' + beltBadgeHtml(t) + "</span>" +
+      '<div class="media-controls"><button type="button" class="btn small icon-btn" id="detailPauseBtn" aria-pressed="false" aria-label="Pause animation"><span aria-hidden="true">⏸</span></button></div>' +
       '<img src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" /></div>' +
       '<div class="detail-names">' +
       '<div class="d-name">' + esc(t.name) +
@@ -1434,7 +1545,21 @@
       '<div class="metric"><span>Spaced Repetition</span><b>' + esc(srsTxt) + "</b></div>" +
       "</div>"
     ));
-    attachImgRetry(document.querySelector(".detail-hero img"));
+    var heroImg = document.querySelector(".detail-hero img");
+    attachImgRetry(heroImg);
+    var heroPaused = reducedMotion.matches;
+    var applyHero = function () {
+      if (heroPaused) freezeGifWhenReady(heroImg); else unfreezeGifElement(heroImg);
+      var b = $("detailPauseBtn");
+      b.setAttribute("aria-pressed", String(heroPaused));
+      b.setAttribute("aria-label", heroPaused ? "Play animation" : "Pause animation");
+      b.querySelector("span").textContent = heroPaused ? "▶" : "⏸";
+    };
+    applyHero();
+    $("detailPauseBtn").addEventListener("click", function () {
+      heroPaused = !heroPaused;
+      applyHero();
+    });
     var dsp = $("detailSpeakBtn");
     if (dsp) dsp.addEventListener("click", function () { speakThrow(t); });
   }
@@ -1577,6 +1702,23 @@
       storage.set(KEY.throws, ts);
       storage.set(KEY.srs, srs);
       storage.set(KEY.activity, C.sanitizeActivity(data.activity));
+      // exports include prefs — restore them too, then reflect them in the UI
+      if (data.prefs) {
+        var sp = C.sanitizePrefs(data.prefs, Object.keys(MODES), BELT_ORDER);
+        sp.autoNext = !!data.prefs.autoNext; // sanitizePrefs doesn't carry this one
+        storage.set(KEY.prefs, sp);
+        state.mode = sp.mode;
+        state.selectedBelts = new Set(sp.belts);
+        state.length = sp.length;
+        state.autoNext = sp.autoNext;
+        state.study.front = sp.studyFront;
+        currentThemePref = sp.theme;
+        $("lengthSelect").value = sp.length;
+        $("studyFront").value = sp.studyFront;
+        applyTheme();
+        renderBeltChips();
+        renderModeCards();
+      }
       closeModal();
       showView("home");
       toast("Imported " + hist.length + " tests");
@@ -1769,6 +1911,7 @@
     });
     $("autoNextChk").addEventListener("change", function (e) {
       state.autoNext = e.target.checked;
+      if (!state.autoNext) clearTimeout(autoNextHandle); // unticking cancels a pending advance
       savePrefs();
     });
 
@@ -1784,6 +1927,10 @@
     $("shuffleBtn").addEventListener("click", shuffleStudy);
     $("knowBtn").addEventListener("click", function () { markCard("known"); });
     $("reviewBtn").addEventListener("click", function () { markCard("review"); });
+    $("studyPauseBtn").addEventListener("click", function () {
+      state.study.paused = !state.study.paused;
+      applyStudyGifState();
+    });
     if (speechOK) {
       $("speakBtn").addEventListener("click", function () {
         var s = state.study;
@@ -1845,14 +1992,21 @@
     // When an updated worker takes over (skipWaiting + claim), the running
     // page may reference assets from a deleted cache. Reload once so the
     // whole app comes from the new version. hadController=false means this
-    // is the very first install — no reload needed.
+    // is the very first install — no reload needed. Never reload out from
+    // under an in-progress quiz — defer until the user leaves it.
     var hadController = !!navigator.serviceWorker.controller;
     var refreshed = false;
-    navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (!hadController || refreshed) return;
+    var doReload = function () {
+      if (refreshed) return;
       refreshed = true;
       location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController || refreshed) return;
+      if (state.quiz && state.quiz.results.length > 0) { pendingSWReload = true; return; }
+      doReload();
     });
+    swDeferredReload = doReload;
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
       .catch(function () { /* offline-first is best-effort */ });
   }

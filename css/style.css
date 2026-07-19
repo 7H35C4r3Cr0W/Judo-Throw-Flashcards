@@ -105,6 +105,9 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  /* a study-card swipe with downward drift must not become Android
+     pull-to-refresh and reload away the in-memory session */
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -606,7 +609,8 @@ select {
   font-size: 13px;
   transition: border-color 0.2s ease;
 }
-.search-box input:focus { border-color: var(--accent); outline: none; }
+.search-box input:focus { border-color: var(--accent); }
+.search-box input:focus:not(:focus-visible) { outline: none; }
 .search-box::before {
   content: "🔍";
   position: absolute;
@@ -686,12 +690,14 @@ select {
   padding: 4px 10px;
   border-radius: 999px;
 }
-.face img.throw-gif {
-  max-width: 100%;
-  max-height: 300px;
+.face img.throw-gif,
+.face canvas.throw-gif {
+  width: min(100%, 420px);
+  height: 290px;
+  object-fit: contain;
   border-radius: 10px;
   background: var(--card-face);
-  padding: 6px;
+  padding: 10px;
   box-shadow: var(--shadow-sm);
 }
 .face .front-word {
@@ -718,7 +724,8 @@ select {
 .back .back-kanji { font-size: 20px; color: var(--accent-text); font-family: var(--font-display); }
 .back .back-english { font-size: 16px; color: var(--text); font-style: italic; }
 .back .back-group { color: var(--muted); font-size: 13px; }
-.back img.throw-gif { max-height: 200px; }
+.back img.throw-gif,
+.back canvas.throw-gif { height: 170px; }
 .back .back-stats {
   display: flex;
   gap: 8px;
@@ -866,12 +873,17 @@ select {
   padding: 20px;
   position: relative;
 }
-.image-wrap img {
-  max-width: 100%;
-  max-height: 420px;
+/* every animation sits in the same-size white panel, scaled to fit —
+   native GIF sizes vary wildly (140px to 345px wide) and would otherwise
+   render as mismatched postage stamps */
+.image-wrap img,
+.image-wrap canvas.gif-frame {
+  width: min(100%, 440px);
+  height: 340px;
+  object-fit: contain;
   border-radius: 10px;
   background: var(--card-face);
-  padding: 6px;
+  padding: 10px;
   box-shadow: var(--shadow-md);
   animation: viewIn 0.3s var(--ease-out);
 }
@@ -912,6 +924,7 @@ select {
   color: #fff;
   padding: 5px 10px;
   border-radius: 999px;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   display: inline-flex;
   align-items: center;
@@ -1088,6 +1101,7 @@ kbd, .kbd {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease;
 }
@@ -1096,6 +1110,7 @@ kbd, .kbd {
   position: relative;
   width: min(720px, 100%);
   max-height: 86vh;
+  max-height: 86dvh; /* iOS Safari: 86vh overflows behind the collapsed URL bar */
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1117,7 +1132,7 @@ kbd, .kbd {
   border-bottom: 1px solid var(--border);
 }
 .modal-header h2 { margin: 0; font-size: 16px; font-family: var(--font-display); }
-.modal-body { padding: 14px 18px 18px; overflow: auto; }
+.modal-body { padding: 14px 18px 18px; overflow: auto; overscroll-behavior: contain; }
 
 .history-detail-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
 .history-detail-meta .metric { padding: 10px; }
@@ -1167,7 +1182,8 @@ kbd, .kbd {
   min-height: 180px;
 }
 .detail-hero .belt-badge { position: absolute; top: 12px; left: 12px; }
-.detail-hero img { max-width: 100%; max-height: 280px; border-radius: 8px; background: var(--card-face); padding: 5px; }
+.detail-hero img,
+.detail-hero canvas { width: min(100%, 400px); height: 280px; object-fit: contain; border-radius: 8px; background: var(--card-face); padding: 8px; }
 .detail-names { text-align: center; margin-bottom: 14px; }
 .detail-names .d-name { font-family: var(--font-display); font-size: 26px; font-weight: 800; }
 .detail-names .d-kanji { color: var(--accent-text); font-size: 17px; font-family: var(--font-display); margin-top: 2px; }
@@ -1191,7 +1207,7 @@ kbd, .kbd {
 
 .toast {
   position: fixed;
-  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(80px);
   background: var(--panel-3);
@@ -1259,8 +1275,9 @@ kbd, .kbd {
 @media (max-width: 560px) {
   .app { padding: 14px 12px 48px; }
   .options { grid-template-columns: 1fr; }
-  .image-wrap { min-height: 240px; }
-  .image-wrap img { max-height: 300px; }
+  .image-wrap { min-height: 240px; padding: 14px; }
+  .image-wrap img,
+  .image-wrap canvas.gif-frame { height: min(280px, 36vh); }
   .brand-title { font-size: 17px; }
   .quiz-toolbar { grid-template-columns: 1fr; }
   .quiz-meta { justify-content: flex-start; }
@@ -1286,6 +1303,12 @@ kbd, .kbd {
 
 /* ═══════════ Touch ergonomics ═══════════ */
 
+button, .btn, .option, .chip, .nav-tab, .mode-card, .flashcard,
+.history-row, .focus-row, .wrong-row, .throw-tile {
+  touch-action: manipulation; /* kills the 300ms/double-tap zoom on rapid taps */
+  -webkit-tap-highlight-color: transparent; /* :active states already give feedback */
+}
+
 @media (pointer: coarse), (hover: none) {
   .btn { min-height: 44px; }
   .chip { min-height: 44px; padding: 10px 14px; }
@@ -1294,6 +1317,19 @@ kbd, .kbd {
   .chip-row { gap: 8px; }
   .nav-tab { min-height: 44px; }
   .option { min-height: 56px; }
+  /* iOS Safari zooms into (and stays zoomed on) any control under 16px */
+  .search-box input, select { font-size: 16px; }
+}
+
+/* landscape phones: width breakpoints never fire, but the viewport is
+   only ~360-420px tall — shrink the tall fixed-height pieces to fit */
+@media (max-height: 560px) {
+  .flashcard { height: min(430px, calc(100vh - 150px)); }
+  .face img.throw-gif, .face canvas.throw-gif { height: min(240px, 46vh); }
+  .back img.throw-gif, .back canvas.throw-gif { height: min(150px, 26vh); }
+  .image-wrap { min-height: 200px; }
+  .image-wrap img,
+  .image-wrap canvas.gif-frame { height: min(280px, 52vh); }
 }
 
 /* ═══════════ Late additions ═══════════ */
@@ -1523,7 +1559,8 @@ button.focus-row:hover, button.wrong-row:hover {
     min-height: 100%;
     border-right: 1px solid var(--border);
   }
-  .quiz-card.has-image .image-wrap img { max-height: 480px; }
+  .quiz-card.has-image .image-wrap img,
+  .quiz-card.has-image .image-wrap canvas.gif-frame { width: min(100%, 480px); height: 420px; }
   .quiz-card.has-image .q-body { align-self: center; }
   .quiz-card.has-image .options { grid-template-columns: 1fr; }
 }
@@ -1532,6 +1569,8 @@ button.focus-row:hover, button.wrong-row:hover {
 
 @media (max-width: 560px) {
   .flashcard { height: clamp(320px, 56vh, 430px); }
+  .face img.throw-gif, .face canvas.throw-gif { height: min(250px, 34vh); }
+  .back img.throw-gif, .back canvas.throw-gif { height: min(150px, 22vh); }
 }
 
 /* the stagger shorthand above would out-cascade the answer feedback

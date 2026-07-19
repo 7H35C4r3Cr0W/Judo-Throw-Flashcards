@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="description" content="Study the 47 throws of Kodokan Judo — flashcards, quizzes, and spaced repetition. Works offline." />
 <meta name="theme-color" content="#0c0e13" />
 <title>Judo Throws — Flashcards &amp; Quiz</title>
@@ -173,6 +173,7 @@
         <button class="btn primary" id="flipBtn">Flip</button>
         <button class="btn" id="nextCardBtn" aria-label="Next card">Next&ensp;→</button>
         <button class="btn ghost" id="shuffleBtn">🔀 Shuffle</button>
+        <button class="btn ghost icon-btn" id="studyPauseBtn" aria-pressed="false" aria-label="Pause animations"><span aria-hidden="true">⏸</span></button>
       </div>
       <div class="study-mark-row">
         <button class="btn know" id="knowBtn">✓ I know this</button>
@@ -180,6 +181,7 @@
         <button class="btn ghost" id="speakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         <span class="pill" id="studyCounts" aria-live="polite"></span>
       </div>
+      <span class="visually-hidden" id="studyLive" aria-live="polite"></span>
     </div>
 
     <!-- ═══════════════ LIBRARY VIEW ═══════════════ -->
@@ -189,7 +191,7 @@
           <input type="search" id="librarySearch" placeholder="Search by name, kanji, or meaning…" aria-label="Search library" />
         </div>
         <div class="grow"></div>
-        <span class="pill" id="libraryCount"></span>
+        <span class="pill" id="libraryCount" aria-live="polite"></span>
       </div>
       <div class="library-groups" id="libraryGroups"></div>
     </div>
