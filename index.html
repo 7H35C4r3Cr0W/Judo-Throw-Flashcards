@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="description" content="Study the 47 throws of Kodokan Judo — flashcards, quizzes, and spaced repetition. Works offline." />
 <meta name="theme-color" content="#0c0e13" />
 <title>Judo Throws — Flashcards &amp; Quiz</title>
@@ -27,6 +27,7 @@
         <button class="nav-tab" id="tabHome" aria-current="page">Home</button>
         <button class="nav-tab" id="tabStudy">Study</button>
         <button class="nav-tab" id="tabLibrary">Library</button>
+        <button class="nav-tab" id="tabCommunity">Community</button>
       </nav>
 
       <div class="header-actions">
@@ -132,6 +133,17 @@
           </div>
         </div>
       </section>
+
+      <!-- Dojo break: a silly mini-game to rest the memorizing muscle -->
+      <section class="game-section" aria-labelledby="gameTitle">
+        <div class="game-head">
+          <div class="game-eyebrow">Dojo break · <span lang="ja">遊び心</span></div>
+          <h2 id="gameTitle" class="game-title">Ippon Toss<span class="game-title-jp" lang="ja">一本投げ</span></h2>
+          <p class="game-sub">Studied hard? Throw somebody. Hold to break uke's balance, release in the
+          glowing zone, and send them flying across the tatami. Earn your belt one ippon at a time.</p>
+        </div>
+        <div data-judo-game></div>
+      </section>
     </div>
 
     <!-- ═══════════════ STUDY VIEW ═══════════════ -->
@@ -173,6 +185,7 @@
         <button class="btn primary" id="flipBtn">Flip</button>
         <button class="btn" id="nextCardBtn" aria-label="Next card">Next&ensp;→</button>
         <button class="btn ghost" id="shuffleBtn">🔀 Shuffle</button>
+        <button class="btn ghost icon-btn" id="studyPauseBtn" aria-pressed="false" aria-label="Pause animations"><span aria-hidden="true">⏸</span></button>
       </div>
       <div class="study-mark-row">
         <button class="btn know" id="knowBtn">✓ I know this</button>
@@ -180,6 +193,7 @@
         <button class="btn ghost" id="speakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         <span class="pill" id="studyCounts" aria-live="polite"></span>
       </div>
+      <span class="visually-hidden" id="studyLive" aria-live="polite"></span>
     </div>
 
     <!-- ═══════════════ LIBRARY VIEW ═══════════════ -->
@@ -189,9 +203,146 @@
           <input type="search" id="librarySearch" placeholder="Search by name, kanji, or meaning…" aria-label="Search library" />
         </div>
         <div class="grow"></div>
-        <span class="pill" id="libraryCount"></span>
+        <span class="pill" id="libraryCount" aria-live="polite"></span>
       </div>
       <div class="library-groups" id="libraryGroups"></div>
+    </div>
+
+    <!-- ═══════════════ COMMUNITY VIEW ═══════════════ -->
+    <div id="communityView" class="view" hidden>
+      <section class="community-banner card" aria-label="Our judo community">
+        <img src="images/community/team-photo.jpg" alt="Group photo of judo students and instructors of all ages and belt ranks together on the mat" loading="lazy" />
+        <div class="community-banner-caption">
+          <div class="game-eyebrow">Off the flashcards, onto the mat · <span lang="ja">柔道家族</span></div>
+          <h2 class="game-title">The Judo Community Behind This App</h2>
+          <p class="game-sub">These 47 throws are taught for real by real instructors. Meet a few of them, see what the
+          team's been up to, and find a camp or club near you.</p>
+        </div>
+      </section>
+
+      <section class="spotlight card" aria-labelledby="spotlightTitle">
+        <img src="images/community/spotlight-tamburello.jpg" alt="Joseph Tamburello smiling and holding up a gold medal" loading="lazy" />
+        <div class="spotlight-text">
+          <div class="game-eyebrow">Community spotlight</div>
+          <h3 id="spotlightTitle">Congratulations, Joseph Tamburello!</h3>
+          <p class="muted">−73kg M2 Champion at the 2026 USA Judo Senior Nationals in Albuquerque, New Mexico. 🥇</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="instructorsTitle">
+        <div class="game-head">
+          <div class="game-eyebrow">Meet the team</div>
+          <h2 id="instructorsTitle" class="game-title">Instructors<span class="game-title-jp" lang="ja">指導者</span></h2>
+          <p class="game-sub">The people teaching these throws in real life, across our affiliated camps and clubs.</p>
+        </div>
+        <div class="instructor-grid">
+          <figure class="instructor-card">
+            <img src="images/community/allan-hernandez.jpg" alt="Portrait of Allan Hernandez" loading="lazy" />
+            <figcaption><span class="i-name">Allan Hernandez</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/artur-minasyan.jpg" alt="Portrait of Artur Minasyan" loading="lazy" />
+            <figcaption><span class="i-name">Artur Minasyan</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/brian.jpg" alt="Portrait of Brian" loading="lazy" />
+            <figcaption><span class="i-name">Brian</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/dana-rucker.jpg" alt="Portrait of Dana Rucker" loading="lazy" />
+            <figcaption><span class="i-name">Dana Rucker</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/jason.jpg" alt="Portrait of Jason" loading="lazy" />
+            <figcaption><span class="i-name">Jason</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/joe-ragan.jpg" alt="Portrait of Joe Ragan" loading="lazy" />
+            <figcaption><span class="i-name">Joe Ragan</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/pat-szrejter.jpg" alt="Portrait of Pat Szrejter" loading="lazy" />
+            <figcaption><span class="i-name">Pat Szrejter</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/pedro-venancio.jpg" alt="Portrait of Pedro Venancio" loading="lazy" />
+            <figcaption><span class="i-name">Pedro Venancio</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/richard-troy.jpg" alt="Portrait of Richard Troy" loading="lazy" />
+            <figcaption><span class="i-name">Richard Troy</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+          <figure class="instructor-card">
+            <img src="images/community/sami.jpg" alt="Portrait of Sensei Sami" loading="lazy" />
+            <figcaption><span class="i-name">Sensei Sami</span><span class="i-role">Instructor</span></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section aria-labelledby="campsTitle">
+        <div class="game-head">
+          <div class="game-eyebrow">Camps &amp; clubs</div>
+          <h2 id="campsTitle" class="game-title">Where to Train</h2>
+          <p class="game-sub">Our affiliated sites — camps, clubs, and the Southeastern Judo calendar.</p>
+        </div>
+        <div class="resource-grid">
+          <a class="resource-card" href="https://judo-caja.com/" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">🥋</span>
+            <span class="r-body"><span class="r-title">Judo Caja</span><span class="r-url">judo-caja.com</span></span>
+          </a>
+          <a class="resource-card" href="https://ncjudo.com/" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">🥋</span>
+            <span class="r-body"><span class="r-title">NC Judo</span><span class="r-url">ncjudo.com</span></span>
+          </a>
+          <a class="resource-card" href="https://scjudo.com/" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">🥋</span>
+            <span class="r-body"><span class="r-title">SC Judo</span><span class="r-url">scjudo.com</span></span>
+          </a>
+          <a class="resource-card" href="https://greatestcamp.com/" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">⛺</span>
+            <span class="r-body"><span class="r-title">Greatest Camp</span><span class="r-url">greatestcamp.com</span></span>
+          </a>
+          <a class="resource-card" href="https://bigzbjj.com/" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">🥋</span>
+            <span class="r-body"><span class="r-title">Big Z BJJ</span><span class="r-url">bigzbjj.com</span></span>
+          </a>
+          <a class="resource-card" href="https://ncjudo.com/JudoCalendar.htm" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">📅</span>
+            <span class="r-body"><span class="r-title">Southeastern Judo Planner</span><span class="r-url">ncjudo.com/JudoCalendar.htm</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section aria-labelledby="connectTitle">
+        <div class="game-head">
+          <div class="game-eyebrow">Stay in touch</div>
+          <h2 id="connectTitle" class="game-title">Connect With Us</h2>
+          <p class="game-sub">Follow along on Facebook, or reach out directly.</p>
+        </div>
+        <div class="resource-grid">
+          <a class="resource-card" href="https://www.facebook.com/judocaja" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">📘</span>
+            <span class="r-body"><span class="r-title">Judo Caja</span><span class="r-url">facebook.com/judocaja</span></span>
+          </a>
+          <a class="resource-card" href="https://www.facebook.com/ncjudo" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">📘</span>
+            <span class="r-body"><span class="r-title">NC Judo</span><span class="r-url">facebook.com/ncjudo</span></span>
+          </a>
+          <a class="resource-card" href="https://www.facebook.com/JudoCamp" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">📘</span>
+            <span class="r-body"><span class="r-title">Judo Camp</span><span class="r-url">facebook.com/JudoCamp</span></span>
+          </a>
+          <a class="resource-card" href="https://www.facebook.com/groups/526520532084748" target="_blank" rel="noopener">
+            <span class="r-icon" aria-hidden="true">👥</span>
+            <span class="r-body"><span class="r-title">Community Group</span><span class="r-url">Facebook group</span></span>
+          </a>
+        </div>
+        <div class="card panel contact-card">
+          <div class="setup-title">Questions about camps or scheduling?</div>
+          <p class="contact-line"><strong>Debbie Rucker</strong> — Allen &amp; Associates Consulting</p>
+          <p class="contact-line"><a href="tel:+17044581222">704-458-1222</a></p>
+        </div>
+      </section>
     </div>
 
     <!-- ═══════════════ QUIZ VIEW ═══════════════ -->
@@ -287,6 +438,7 @@
       <a href="https://judo-caja.com/techniques.html" target="_blank" rel="noopener">judo-caja.com</a>
       · Photo via
       <a href="https://en.wikipedia.org/wiki/Kan%C5%8D_Jigor%C5%8D" target="_blank" rel="noopener">Wikipedia</a>
+      · Community photos courtesy of the Judo Caja family
       · Works offline
     </footer>
   </div>
@@ -324,5 +476,6 @@
   <script src="js/data.js"></script>
   <script src="js/core.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/judo-game.js"></script>
 </body>
 </html>
