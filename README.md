@@ -31,6 +31,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 ├── manifest.webmanifest     ← PWA install metadata
 ├── icons/                   ← 柔 hanko app icon (SVG + PNG)
 ├── images/technique/        ← 47 throw animations (.gif)
+├── images/community/        ← instructor & team photos (Community tab)
 ├── kano_jigoro.jpg          ← Kanō Jigorō portrait
 ├── tests/core.test.mjs      ← unit tests (node --test, zero dependencies)
 └── download_images.ps1      ← optional: re-download GIFs from the source
@@ -79,6 +80,10 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 
 ### 🔊 Pronunciation
 - "Say it" buttons speak each throw's name using your device's built-in speech (a Japanese voice reads the kanji when available) — no downloads, works offline
+
+### 🥋 Community
+- Meet the instructors behind the throws, a team photo, and a competition spotlight
+- Links to affiliated camps/clubs (Judo Caja, NC Judo, SC Judo, Greatest Camp, Big Z BJJ), the Southeastern Judo calendar, and Facebook pages/group
 
 ### Design & accessibility
 - Dark **sumi-ink** and light **washi-paper** themes (follows your system, toggleable)
@@ -158,6 +163,7 @@ python3 -m http.server 8080
 - **Throw animations** courtesy of [judo-caja.com](https://judo-caja.com/techniques.html).
 - **Portrait of Kanō Jigorō** via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Portrait_of_late_Mr._Kano.jpg) (public domain).
 - **Technique list** from [Wikipedia: Kodokan Judo techniques](https://en.wikipedia.org/wiki/List_of_Kodokan_Judo_techniques).
+- **Instructor & team photos** courtesy of the Judo Caja community.
 
 ## License
 

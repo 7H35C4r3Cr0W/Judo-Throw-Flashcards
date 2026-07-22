@@ -1655,3 +1655,112 @@ button.focus-row:hover, button.wrong-row:hover {
   margin: 0;
   max-width: 640px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Community view — team banner, spotlight, instructors, resources.
+═══════════════════════════════════════════════════════════════ */
+
+#communityView > section { margin-bottom: 26px; }
+#communityView > section:last-child { margin-bottom: 0; }
+
+.community-banner { padding: 0; overflow: hidden; }
+.community-banner img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: center 20%;
+  background: var(--panel-3);
+}
+.community-banner-caption { padding: 18px 20px 20px; }
+.community-banner-caption .game-sub { max-width: none; }
+
+.spotlight {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  background: linear-gradient(120deg, var(--accent-soft), var(--panel) 55%);
+}
+.spotlight img {
+  width: 96px;
+  height: 128px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  box-shadow: var(--shadow-sm);
+  flex: none;
+}
+.spotlight-text h3 { margin: 0 0 4px; font-family: var(--font-display); font-size: 17px; }
+.spotlight-text p { margin: 0; font-size: 13px; }
+
+.instructor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+.instructor-card {
+  margin: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.18s var(--ease-out);
+}
+.instructor-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.instructor-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: var(--panel-3);
+}
+.instructor-card figcaption { display: flex; flex-direction: column; padding: 8px 10px 10px; }
+.instructor-card .i-name { font-weight: 700; font-size: 13px; }
+.instructor-card .i-role { color: var(--muted); font-size: 11px; margin-top: 1px; }
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.resource-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.18s var(--ease-out);
+}
+.resource-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.r-icon {
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+.r-body { display: flex; flex-direction: column; min-width: 0; }
+.r-title { font-weight: 700; font-size: 13.5px; }
+.r-url { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.contact-card { margin-top: 12px; }
+.contact-line { margin: 4px 0; font-size: 14px; }
+.contact-line a { color: var(--accent-text); font-weight: 700; text-decoration: none; }
+.contact-line a:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .community-banner img { max-height: 220px; }
+  .spotlight { flex-direction: column; align-items: flex-start; text-align: left; }
+  .spotlight img { width: 100%; height: 180px; object-position: top center; }
+  .instructor-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+}

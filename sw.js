@@ -2,7 +2,7 @@
    so it works fully offline after the first visit.
    Bump CACHE_VERSION whenever any precached file changes. */
 
-var CACHE_VERSION = "judo-v2.2.2";
+var CACHE_VERSION = "judo-v2.3.0";
 
 var APP_SHELL = [
   "./",
@@ -70,6 +70,21 @@ var GIFS = [
   "images/technique/uchi_makikomi.gif"
 ];
 
+var COMMUNITY_IMAGES = [
+  "images/community/team-photo.jpg",
+  "images/community/spotlight-tamburello.jpg",
+  "images/community/allan-hernandez.jpg",
+  "images/community/artur-minasyan.jpg",
+  "images/community/brian.jpg",
+  "images/community/dana-rucker.jpg",
+  "images/community/jason.jpg",
+  "images/community/joe-ragan.jpg",
+  "images/community/pat-szrejter.jpg",
+  "images/community/pedro-venancio.jpg",
+  "images/community/richard-troy.jpg",
+  "images/community/sami.jpg"
+];
+
 /* "no-cache" forces revalidation against the server so a version bump can
    never precache files the browser HTTP cache is still holding stale. */
 function freshRequest(url) {
@@ -81,9 +96,10 @@ self.addEventListener("install", function (event) {
     caches.open(CACHE_VERSION).then(function (cache) {
       // the app shell is atomic: fail the install if any piece is missing…
       return cache.addAll(APP_SHELL.map(freshRequest)).then(function () {
-        // …but GIFs are best-effort — one bad file must not brick every
-        // future update (missing ones self-heal via runtime caching)
-        return Promise.all(GIFS.map(function (u) {
+        // …but GIFs and community photos are best-effort — one bad file
+        // must not brick every future update (missing ones self-heal via
+        // runtime caching)
+        return Promise.all(GIFS.concat(COMMUNITY_IMAGES).map(function (u) {
           return cache.add(freshRequest(u)).catch(function () {});
         }));
       });
