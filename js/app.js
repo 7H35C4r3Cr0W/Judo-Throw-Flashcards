@@ -254,7 +254,7 @@
 
   /* ═══════════ View routing ═══════════ */
 
-  var VIEWS = ["home", "study", "library", "community", "quiz", "summary"];
+  var VIEWS = ["home", "study", "library", "quiz", "summary"];
 
   function setCurrentTab(id, on) {
     if (on) $(id).setAttribute("aria-current", "page");
@@ -263,7 +263,7 @@
 
   function showView(v) {
     // a deferred SW-update reload can now run safely (not mid-quiz/summary)
-    if (pendingSWReload && (v === "home" || v === "study" || v === "library" || v === "community") && swDeferredReload) {
+    if (pendingSWReload && (v === "home" || v === "study" || v === "library") && swDeferredReload) {
       pendingSWReload = false;
       swDeferredReload();
       return;
@@ -273,7 +273,6 @@
     setCurrentTab("tabHome", v === "home" || v === "quiz" || v === "summary");
     setCurrentTab("tabStudy", v === "study");
     setCurrentTab("tabLibrary", v === "library");
-    setCurrentTab("tabCommunity", v === "community");
     window.scrollTo(0, 0);
     if (v === "home") refreshHome();
     if (v === "study") refreshStudy();
@@ -1879,7 +1878,6 @@
     $("tabHome").addEventListener("click", function () { requestView("home"); });
     $("tabStudy").addEventListener("click", function () { requestView("study"); });
     $("tabLibrary").addEventListener("click", function () { requestView("library"); });
-    $("tabCommunity").addEventListener("click", function () { requestView("community"); });
 
     $("themeBtn").addEventListener("click", toggleTheme);
     $("helpBtn").addEventListener("click", openHelp);
