@@ -26,6 +26,8 @@
 
   // a quiz "card" is a throw or a term — this reads whichever name it has
   function nameOf(c) { return c && (c.name || c.term); }
+  // terms are keyed by .term in their stats/srs stores
+  function termKey(t) { return t.term; }
   // dispatch a detail modal by whichever dataset the name belongs to
   function openCardDetail(name) {
     if (THROW_BY_NAME[name]) openThrowDetail(name);
@@ -51,7 +53,9 @@
     throws: "judo_quiz_throws_v1",
     prefs: "judo_quiz_prefs_v1",
     srs: "judo_quiz_srs_v1",
-    activity: "judo_quiz_activity_v1"
+    activity: "judo_quiz_activity_v1",
+    termStats: "judo_terms_stats_v1",
+    termSrs: "judo_terms_srs_v1"
   };
 
   var storage = {
@@ -74,6 +78,9 @@
   function getThrowStats() { return C.sanitizeThrowStats(storage.get(KEY.throws, {})); }
   function getSrs() { return C.sanitizeSrs(storage.get(KEY.srs, {})); }
   function getActivity() { return C.sanitizeActivity(storage.get(KEY.activity, {})); }
+  // terms reuse the same sanitizers/schema as throws, in their own store
+  function getTermStats() { return C.sanitizeThrowStats(storage.get(KEY.termStats, {})); }
+  function getTermSrs() { return C.sanitizeSrs(storage.get(KEY.termSrs, {})); }
 
   /* every finished quiz or study mark counts toward the day streak */
   function recordActivity() {
@@ -157,6 +164,7 @@
       query: "",
       selectedCats: new Set(TERM_CATEGORIES.map(function (c) { return c.key; })),
       layout: "cards",
+      filter: "all",
       shuffled: false,
       order: null
     }
@@ -1048,8 +1056,11 @@
       ts: Date.now()
     });
 
-    // terms have no spaced-repetition schedule or per-card stats (throws only)
-    if (!isTerms) {
+    // both throws and terms feed their own spaced-repetition schedule + stats
+    if (isTerms) {
+      updateTermStats(nm, correct);
+      updateTermSrs(nm, correct);
+    } else {
       updateThrowStats(t.name, correct);
       updateSrs(t.name, correct);
     }
@@ -1121,6 +1132,25 @@
     next.flag = flag !== undefined ? flag : (srs[name] ? srs[name].flag : null);
     srs[name] = next;
     storage.set(KEY.srs, srs);
+    return next;
+  }
+
+  // the term equivalents — same Leitner logic, keyed by t.term in their own store
+  function updateTermStats(name, correct) {
+    var ts = getTermStats();
+    if (!ts[name]) ts[name] = { seen: 0, correct: 0, lastSeen: 0 };
+    ts[name].seen += 1;
+    if (correct) ts[name].correct += 1;
+    ts[name].lastSeen = Date.now();
+    storage.set(KEY.termStats, ts);
+  }
+
+  function updateTermSrs(name, correct, flag) {
+    var srs = getTermSrs();
+    var next = C.srsOnAnswer(srs[name], correct, Date.now());
+    next.flag = flag !== undefined ? flag : (srs[name] ? srs[name].flag : null);
+    srs[name] = next;
+    storage.set(KEY.termSrs, srs);
     return next;
   }
 
@@ -1655,7 +1685,41 @@
 
   function computeTermDeck() {
     // an empty category set yields no terms (mirrors belt chips in Study)
-    return C.filterTerms(TERMS, { query: state.terms.query, categories: state.terms.selectedCats });
+    var deck = C.filterTerms(TERMS, { query: state.terms.query, categories: state.terms.selectedCats });
+    var srs = getTermSrs();
+    var stats = getTermStats();
+    var now = Date.now();
+    var f = state.terms.filter;
+    if (f === "due") deck = deck.filter(function (t) { return srs[t.term] && C.srsIsDue(srs[t.term], now); });
+    else if (f === "review") deck = deck.filter(function (t) { return srs[t.term] && srs[t.term].flag === "review"; });
+    else if (f === "unseen") deck = deck.filter(function (t) { return !srs[t.term] && !stats[t.term]; });
+    return deck;
+  }
+
+  function termStatsPills(t) {
+    var stats = getTermStats()[t.term];
+    var srs = getTermSrs()[t.term];
+    var bits = [];
+    if (stats && stats.seen) bits.push('<span class="pill">Accuracy <b>' + Math.round((stats.correct / stats.seen) * 100) + "%</b></span>");
+    if (srs) bits.push('<span class="pill">Box <b>' + srs.box + "/5</b></span>");
+    if (srs && srs.flag === "known") bits.push('<span class="pill">✓ known</span>');
+    if (srs && srs.flag === "review") bits.push('<span class="pill">↻ review</span>');
+    return bits.join("");
+  }
+
+  function updateTermCounts() {
+    var srs = getTermSrs();
+    var now = Date.now();
+    var known = 0, review = 0, due = 0;
+    state.terms.deck.forEach(function (t) {
+      var e = srs[t.term];
+      if (e && e.flag === "known") known++;
+      if (e && e.flag === "review") review++;
+      if (e && C.srsIsDue(e, now)) due++;
+    });
+    $("termCounts").textContent =
+      state.terms.deck.length + " terms · " + known + " known · " + review + " to review" +
+      (due ? " · " + due + " due" : "");
   }
 
   function indexOfTerm(deck, term) {
@@ -1670,6 +1734,7 @@
   }
 
   function refreshTerms(keepIndex) {
+    cancelPendingTermMark(); // filter/search changes supersede a pending sweep-advance
     var t = state.terms;
     var current = keepIndex && t.deck.length ? t.deck[t.index] : null;
     var deck = computeTermDeck();
@@ -1744,13 +1809,57 @@
       (term.kanji ? '<span class="back-kanji" lang="ja">' + esc(term.kanji) + "</span>" : "") +
       '<span class="back-english">' + esc(term.english) + "</span>" +
       (term.note ? '<span class="term-note">' + esc(term.note) + "</span>" : "") +
-      '<span class="back-group">' + esc(cat.label) + "</span>";
+      '<span class="back-group">' + esc(cat.label) + "</span>" +
+      '<span class="back-stats">' + termStatsPills(term) + "</span>";
 
     card.classList.toggle("flipped", t.flipped);
     card.setAttribute("aria-label", termCardLabel(term, t, count));
     announceTerm(termCardLabel(term, t, count));
-    $("termCounts").textContent = deck.length + (deck.length === 1 ? " term" : " terms");
+
+    var srs = getTermSrs()[term.term];
+    $("termKnowBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "known")));
+    $("termReviewBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "review")));
+
+    updateTermCounts();
     updateTermSpeakBtn(term);
+  }
+
+  /* ── Term study marks (spaced repetition) ──────────────────── */
+
+  var termMarkHandle = null;
+
+  function cancelPendingTermMark() {
+    if (!termMarkHandle) return false;
+    clearTimeout(termMarkHandle);
+    termMarkHandle = null;
+    $("termCard").classList.remove("mark-known", "mark-review");
+    return true;
+  }
+
+  function completePendingTermMark() {
+    if (cancelPendingTermMark()) termNav(1);
+  }
+
+  function markTermCard(flag) {
+    var s = state.terms;
+    if (!s.deck.length) return;
+    completePendingTermMark();
+    var term = s.deck[s.index];
+    var entry = updateTermSrs(term.term, flag === "known", flag);
+    recordActivity();
+    var days = C.LEITNER_INTERVALS_DAYS[entry.box - 1];
+    toast(flag === "known"
+      ? term.term + " → box " + entry.box + " · next review in " + (days === 0 ? "today" : days + "d")
+      : term.term + " marked for review");
+    var card = $("termCard");
+    var cls = flag === "known" ? "mark-known" : "mark-review";
+    if (reducedMotion.matches) { termNav(1); return; }
+    card.classList.add(cls);
+    termMarkHandle = setTimeout(function () {
+      termMarkHandle = null;
+      card.classList.remove(cls);
+      termNav(1);
+    }, 280);
   }
 
   function termFlip() {
@@ -1776,6 +1885,7 @@
   function termNav(dir) {
     var t = state.terms;
     if (!t.deck.length) return;
+    cancelPendingTermMark(); // user navigation supersedes a pending sweep-advance
     t.index = (t.index + dir + t.deck.length) % t.deck.length;
     t.flipped = false;
     resetTermFlipInstant();
@@ -1789,6 +1899,7 @@
   function shuffleTerms() {
     var t = state.terms;
     if (!t.deck.length) return;
+    cancelPendingTermMark();
     t.shuffled = true;
     t.order = {};
     C.shuffle(TERMS).forEach(function (term, i) { t.order[term.term] = i; });
@@ -1806,13 +1917,18 @@
   function startTermQuiz(mode) {
     var pool = computeTermDeck();
     if (!pool.length) { toast("No terms selected — widen the categories or search"); return; }
-    startQuiz({ deck: C.shuffle(pool), kind: "terms", termMode: mode });
+    // order due → unseen → weakest first (spaced repetition), keyed by t.term
+    var deck = C.buildSmartDeck(pool, getTermSrs(), getTermStats(), "all", Date.now(), undefined, termKey);
+    startQuiz({ deck: deck, kind: "terms", termMode: mode });
   }
 
   function renderTermGlossary() {
     var host = $("termGlossary");
     host.innerHTML = "";
     var matches = computeTermDeck();
+    var stats = getTermStats();
+    var srs = getTermSrs();
+    var now = Date.now();
     TERM_CATEGORIES.forEach(function (c) {
       if (!state.terms.selectedCats.has(c.key)) return;
       var items = matches.filter(function (t) { return t.category === c.key; });
@@ -1822,6 +1938,15 @@
       var grid = document.createElement("div");
       grid.className = "library-grid";
       items.forEach(function (term) {
+        var s = stats[term.term];
+        var e = srs[term.term];
+        var badges = "";
+        if (s && s.seen) {
+          var pct = Math.round((s.correct / s.seen) * 100);
+          var cls = pct < 50 ? "bad" : pct < 80 ? "mid" : "good";
+          badges += '<span class="acc-pill ' + cls + '">' + pct + "%</span>";
+        }
+        if (e && C.srsIsDue(e, now)) badges += '<span class="pill">due</span>';
         var tile = document.createElement("button");
         tile.className = "throw-tile term-tile";
         tile.setAttribute("aria-label", term.term + ", " + term.english + " — view details");
@@ -1829,7 +1954,7 @@
           "<span><span class=\"t-name\">" + esc(term.term) +
           (term.kanji ? '<span class="t-kanji" lang="ja">' + esc(term.kanji) + "</span>" : "") + "</span>" +
           '<span class="t-english" style="display:block;">' + esc(term.english) + "</span></span>" +
-          '<span class="t-badges"><span class="cat-dot" style="background:' + esc(c.color) + ';" aria-hidden="true"></span></span>';
+          '<span class="t-badges"><span class="cat-dot" style="background:' + esc(c.color) + ';" aria-hidden="true"></span>' + badges + "</span>";
         tile.addEventListener("click", function () { openTermDetail(term.term); });
         grid.appendChild(tile);
       });
@@ -1849,6 +1974,13 @@
     var term = TERM_BY_NAME[name];
     if (!term) return;
     var cat = TERM_CAT_BY_KEY[term.category] || { label: term.category, color: "#888", sub: "" };
+    var s = getTermStats()[name];
+    var e = getTermSrs()[name];
+    var acc = s && s.seen ? Math.round((s.correct / s.seen) * 100) + "%" : "—";
+    var seen = s ? s.seen : 0;
+    var srsTxt = e
+      ? "Box " + e.box + "/5" + (C.srsIsDue(e, Date.now()) ? " · due now" : "")
+      : "not scheduled";
     openModal(term.term, (
       '<div class="term-detail">' +
       '<span class="belt-badge term-detail-cat"><span class="dot" style="background:' + esc(cat.color) +
@@ -1860,6 +1992,11 @@
       '<div class="d-english">' + esc(term.english) + "</div>" +
       (term.note ? '<p class="term-detail-note">' + esc(term.note) + "</p>" : "") +
       (cat.sub ? '<div class="muted small term-detail-sub">' + esc(cat.label) + " · " + esc(cat.sub) + "</div>" : "") +
+      '<div class="detail-stats" style="margin-top:14px;">' +
+      '<div class="metric"><span>Accuracy</span><b>' + acc + "</b></div>" +
+      '<div class="metric"><span>Times Seen</span><b>' + seen + "</b></div>" +
+      '<div class="metric"><span>Spaced Repetition</span><b>' + esc(srsTxt) + "</b></div>" +
+      "</div>" +
       "</div>"
     ));
     var sp = $("termDetailSpeakBtn");
@@ -2020,11 +2157,13 @@
   function exportData() {
     var payload = {
       app: "judo-throw-flashcards",
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       history: getHistory(),
       throws: getThrowStats(),
       srs: getSrs(),
+      termStats: getTermStats(),
+      termSrs: getTermSrs(),
       activity: getActivity(),
       prefs: storage.get(KEY.prefs, {})
     };
@@ -2054,6 +2193,9 @@
       storage.set(KEY.history, hist);
       storage.set(KEY.throws, ts);
       storage.set(KEY.srs, srs);
+      // term stats/srs reuse the throw sanitizers (same schema); absent in v2 backups
+      storage.set(KEY.termStats, C.sanitizeThrowStats(data.termStats));
+      storage.set(KEY.termSrs, C.sanitizeSrs(data.termSrs));
       storage.set(KEY.activity, C.sanitizeActivity(data.activity));
       // exports include prefs — restore them too, then reflect them in the UI
       if (data.prefs) {
@@ -2101,6 +2243,8 @@
       ["Terms", ""],
       ["← →", "Previous / next term"],
       ["Space or F", "Flip the term card"],
+      ["K", "Mark “I know this”"],
+      ["R", "Mark “needs review”"],
       ["S", "Shuffle the terms"]
     ];
     var html = '<div class="shortcut-grid">';
@@ -2203,6 +2347,8 @@
           termFlip();
           break;
         }
+        case "k": case "K": markTermCard("known"); break;
+        case "r": case "R": markTermCard("review"); break;
         case "s": case "S": shuffleTerms(); break;
       }
     }
@@ -2346,9 +2492,15 @@
     $("termPrevBtn").addEventListener("click", function () { termNav(-1); });
     $("termNextBtn").addEventListener("click", function () { termNav(1); });
     $("termShuffleBtn").addEventListener("click", shuffleTerms);
+    $("termKnowBtn").addEventListener("click", function () { markTermCard("known"); });
+    $("termReviewBtn").addEventListener("click", function () { markTermCard("review"); });
     $("termQuizBtn").addEventListener("click", function () { startTermQuiz($("termQuizMode").value); });
     $("termSearch").addEventListener("input", function (e) {
       state.terms.query = e.target.value;
+      refreshTerms();
+    });
+    $("termFilter").addEventListener("change", function (e) {
+      state.terms.filter = e.target.value;
       refreshTerms();
     });
     $("termLayout").addEventListener("change", function (e) {

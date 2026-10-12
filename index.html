@@ -221,6 +221,12 @@
         <div class="search-box">
           <input type="search" id="termSearch" placeholder="Search terms…" aria-label="Search terms" />
         </div>
+        <select id="termFilter" aria-label="Term filter">
+          <option value="all" selected>All terms</option>
+          <option value="due">Due for review</option>
+          <option value="review">Marked “review”</option>
+          <option value="unseen">Not yet studied</option>
+        </select>
         <select id="termLayout" aria-label="Terms layout">
           <option value="cards" selected>View: Flashcards</option>
           <option value="list">View: Glossary</option>
@@ -248,6 +254,8 @@
           <button class="btn ghost" id="termSpeakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         </div>
         <div class="study-mark-row">
+          <button class="btn know" id="termKnowBtn">✓ I know this</button>
+          <button class="btn review" id="termReviewBtn">↻ Needs review</button>
           <span class="pill" id="termCounts" aria-live="polite"></span>
         </div>
         <div class="term-quiz-bar">

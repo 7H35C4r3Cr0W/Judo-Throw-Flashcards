@@ -122,19 +122,24 @@
     };
   }
 
-  function masteredCount(throwStats, throws) {
+  /* keyFn maps an item to its stats/srs key — t.name for throws, t.term
+     for the general-vocabulary terms. Defaults to t.name so every
+     existing caller keeps working unchanged. */
+  function masteredCount(throwStats, throws, keyFn) {
+    var key = keyFn || function (t) { return t.name; };
     var n = 0;
     for (var i = 0; i < throws.length; i++) {
-      var s = throwStats[throws[i].name];
+      var s = throwStats[key(throws[i])];
       if (s && s.seen >= 3 && s.correct / s.seen >= 0.8) n++;
     }
     return n;
   }
 
-  function computeFocus(throwStats, throws, limit) {
+  function computeFocus(throwStats, throws, limit, keyFn) {
+    var key = keyFn || function (t) { return t.name; };
     return throws
       .map(function (t) {
-        var s = throwStats[t.name];
+        var s = throwStats[key(t)];
         if (!s || s.seen < 2) return null;
         return { t: t, seen: s.seen, correct: s.correct, acc: s.correct / s.seen };
       })
@@ -170,12 +175,13 @@
 
   /* Deck for Smart Drill: due cards first (most overdue first),
      then unseen cards, then the rest by weakest accuracy. */
-  function buildSmartDeck(throws, srs, throwStats, len, now, rng) {
+  function buildSmartDeck(throws, srs, throwStats, len, now, rng, keyFn) {
+    var key = keyFn || function (t) { return t.name; };
     var due = [], unseen = [], rest = [];
     for (var i = 0; i < throws.length; i++) {
       var t = throws[i];
-      var e = srs[t.name];
-      var s = throwStats[t.name];
+      var e = srs[key(t)];
+      var s = throwStats[key(t)];
       if (!e && !s) unseen.push(t);
       // only SCHEDULED cards count as due — legacy stats-only cards go to
       // "rest" (sorted by weakness), keeping this consistent with countDue
@@ -183,12 +189,12 @@
       else rest.push(t);
     }
     due.sort(function (a, b) {
-      var da = srs[a.name] ? srs[a.name].due : 0;
-      var db = srs[b.name] ? srs[b.name].due : 0;
+      var da = srs[key(a)] ? srs[key(a)].due : 0;
+      var db = srs[key(b)] ? srs[key(b)].due : 0;
       return da - db;
     });
     var accOf = function (t) {
-      var s = throwStats[t.name];
+      var s = throwStats[key(t)];
       return s && s.seen ? s.correct / s.seen : 0.5;
     };
     rest.sort(function (a, b) { return accOf(a) - accOf(b); });
@@ -199,10 +205,11 @@
     return ordered.slice(0, Math.min(n, ordered.length));
   }
 
-  function countDue(throws, srs, now) {
+  function countDue(throws, srs, now, keyFn) {
+    var key = keyFn || function (t) { return t.name; };
     var n = 0;
     for (var i = 0; i < throws.length; i++) {
-      var e = srs[throws[i].name];
+      var e = srs[key(throws[i])];
       if (e && srsIsDue(e, now)) n++;
     }
     return n;

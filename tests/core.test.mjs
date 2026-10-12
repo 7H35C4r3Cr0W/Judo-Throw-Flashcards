@@ -294,6 +294,25 @@ test("countDue counts only scheduled-and-due entries", () => {
   assert.equal(C.countDue(THROWS, srs, now), 1);
 });
 
+test("SRS functions accept a keyFn so terms can be keyed by .term", () => {
+  const now = 1_700_000_000_000;
+  const items = [{ term: "A" }, { term: "B" }, { term: "C" }];
+  const key = (t) => t.term;
+  const srs = { A: { box: 2, due: now - C.DAY_MS }, C: { box: 3, due: now + 5 * C.DAY_MS } };
+  const stats = { A: { seen: 4, correct: 1 }, C: { seen: 4, correct: 4 } };
+
+  assert.equal(C.countDue(items, srs, now, key), 1);
+
+  const deck = C.buildSmartDeck(items, srs, stats, "all", now, undefined, key);
+  assert.deepEqual(deck.map((t) => t.term), ["A", "B", "C"]); // due, unseen, rest
+
+  assert.equal(C.masteredCount({ A: { seen: 3, correct: 3 }, B: { seen: 3, correct: 1 } }, items, key), 1);
+
+  const focus = C.computeFocus({ A: { seen: 4, correct: 1 }, C: { seen: 4, correct: 4 } }, items, 6, key);
+  assert.equal(focus.length, 1);        // C is perfect → excluded
+  assert.equal(focus[0].t.term, "A");
+});
+
 /* ── Storage sanitizers ─────────────────────────────────────── */
 
 test("sanitizeHistory: rejects garbage shapes wholesale", () => {
