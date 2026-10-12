@@ -409,6 +409,25 @@
     });
   }
 
+  /* ── Terms (glossary) filtering ──────────────────────────────
+     General vocabulary, not throws: no belts/images. Filter by a set
+     of category keys (null = all) and a free-text query that matches
+     the romaji, the English gloss, the kanji/kana, or the note. */
+
+  function filterTerms(terms, opts) {
+    var q = (opts.query || "").trim().toLowerCase();
+    var raw = (opts.query || "").trim();
+    var cats = opts.categories; // Set or null = all
+    return terms.filter(function (t) {
+      if (cats && !cats.has(t.category)) return false;
+      if (!q) return true;
+      return t.term.toLowerCase().indexOf(q) !== -1 ||
+        t.english.toLowerCase().indexOf(q) !== -1 ||
+        (!!t.kanji && t.kanji.indexOf(raw) !== -1) ||
+        (!!t.note && t.note.toLowerCase().indexOf(q) !== -1);
+    });
+  }
+
   var CORE = {
     shuffle: shuffle,
     escapeHtml: escapeHtml,
@@ -433,6 +452,7 @@
     sanitizeSrs: sanitizeSrs,
     sanitizePrefs: sanitizePrefs,
     filterThrows: filterThrows,
+    filterTerms: filterTerms,
     normalizeAnswer: normalizeAnswer,
     levenshtein: levenshtein,
     matchAnswer: matchAnswer,

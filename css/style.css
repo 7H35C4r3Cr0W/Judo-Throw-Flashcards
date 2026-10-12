@@ -813,6 +813,45 @@ select {
 .throw-tile .t-english { color: var(--muted); font-size: 12px; margin-top: 1px; }
 .throw-tile .t-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 
+/* ═══════════ Terms (vocabulary) ═══════════ */
+
+.terms-intro { margin: 2px 0 14px; }
+
+/* category dot — mirrors .dot, but the colour is set inline from data.js */
+.cat-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+[data-theme="light"] .cat-dot { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18); }
+
+/* term flip-cards are text-only — they need far less height than GIF study cards */
+.flashcard.term-card { height: clamp(250px, 40vh, 330px); }
+.term-card .belt-badge { max-width: calc(100% - 92px); white-space: nowrap; overflow: hidden; }
+
+.face .term-note {
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+  text-align: center;
+  max-width: 44ch;
+  margin-top: 2px;
+}
+
+.term-tile .t-badges { flex-direction: row; align-items: center; }
+
+/* term detail modal — reuses the detail typography but isn't nested under .detail-names */
+.term-detail { text-align: center; }
+.term-detail .term-detail-cat { display: inline-flex; margin-bottom: 2px; }
+.term-detail .d-name { font-family: var(--font-display); font-size: 26px; font-weight: 800; margin-top: 10px; }
+.term-detail .d-kanji { color: var(--accent-text); font-size: 20px; font-family: var(--font-display); margin-top: 2px; }
+.term-detail .d-english { color: var(--text); font-style: italic; margin-top: 4px; }
+.term-detail .term-detail-note {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 48ch;
+  margin: 12px auto;
+  text-align: left;
+}
+.term-detail .term-detail-sub { margin-top: 4px; }
+
 /* ═══════════ Quiz ═══════════ */
 
 .quiz-toolbar {

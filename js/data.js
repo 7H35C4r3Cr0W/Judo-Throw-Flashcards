@@ -89,7 +89,83 @@
     "smart":           { icon: "🧠", title: "Smart Drill", desc: "Mixed questions, weakest throws first",      label: "🧠 Smart" }
   };
 
-  var DATA = { THROWS: THROWS, BELT_ORDER: BELT_ORDER, BELT_META: BELT_META, MODES: MODES };
+  /* ═══════════════════════════════════════════════════════════════
+     General judo vocabulary — NOT throws. Commands, roles, body-part
+     modifiers, the waza families, and contest scoring. Kept separate
+     from THROWS (no images, no belt groups) and studied as plain
+     flip-cards in the Terms section. Fact-checked against the Kodokan,
+     the IJF rules, and the Wikipedia judo glossary.
+  ═══════════════════════════════════════════════════════════════ */
+
+  var TERM_CATEGORIES = [
+    { key: "etiquette", label: "Commands & Etiquette", sub: "words heard in the dojo",   color: "#e5484d" },
+    { key: "concepts",  label: "Core Concepts",        sub: "gripping & training",        color: "#f59e0b" },
+    { key: "phases",    label: "Roles & Phases",       sub: "the anatomy of a throw",     color: "#22c55e" },
+    { key: "body",      label: "Body Parts",           sub: "modifiers inside throw names", color: "#3b82f6" },
+    { key: "waza",      label: "Technique Categories", sub: "the families of waza",       color: "#a855f7" },
+    { key: "scoring",   label: "Scoring & Penalties",  sub: "in shiai (contest)",         color: "#ec4899" }
+  ];
+
+  var TERMS = [
+    // ── Commands & Etiquette ──────────────────────────────────
+    { term: "Hajime",   kanji: "始め",     english: "Begin / start",            category: "etiquette", note: "The command to start — and to resume action after Mate." },
+    { term: "Mate",     kanji: "待て",     english: "Wait / stop",              category: "etiquette", note: "Referee command to pause the contest. Often romanized “Matte”." },
+    { term: "Rei",      kanji: "礼",       english: "Bow",                      category: "etiquette", note: "The bow of respect — standing (ritsurei) or kneeling (zarei)." },
+    { term: "Sono Mama", kanji: "そのまま", english: "Freeze — do not move", category: "etiquette", note: "Written in kana. Pauses the action in ne-waza without resetting position." },
+    { term: "Yoshi",    kanji: "よし",     english: "Carry on / resume",        category: "etiquette", note: "Written in kana. Restarts the action after Sono mama." },
+    { term: "Maitta",   kanji: "参った",   english: "I submit / I give up",     category: "etiquette", note: "Spoken, or signalled by tapping twice (the tap-out)." },
+    { term: "Dojo",     kanji: "道場",     english: "Training hall",            category: "etiquette", note: "Literally “place of the Way.”" },
+    { term: "Judogi",   kanji: "柔道着",   english: "Judo uniform",             category: "etiquette", note: "Commonly shortened to “gi.” Also written 柔道衣." },
+    { term: "Judoka",   kanji: "柔道家",   english: "A judo practitioner",      category: "etiquette", note: "Someone who practises judo." },
+    { term: "Sensei",   kanji: "先生",     english: "Teacher / instructor",     category: "etiquette", note: "Literally “one who has gone before.”" },
+    { term: "Obi",      kanji: "帯",       english: "Belt",                     category: "etiquette", note: "Its colour marks the wearer’s kyu or dan rank." },
+    { term: "Tatami",   kanji: "畳",       english: "Mat",                      category: "etiquette", note: "The matted surface judo is trained and contested on." },
+
+    // ── Core Concepts (gripping & training) ───────────────────
+    { term: "Kumi-kata", kanji: "組み方", english: "Gripping method",          category: "concepts", note: "How you take and manage your grips on the judogi before attacking." },
+    { term: "Uchi-komi", kanji: "打ち込み", english: "Repetition (fit-in) training", category: "concepts", note: "Drilling a throw’s entry (kuzushi + tsukuri) without completing it — as opposed to nage-komi, which repeats the full throw." },
+
+    // ── Roles & Phases of a throw ─────────────────────────────
+    { term: "Tori",     kanji: "取り",     english: "The one who executes the technique", category: "phases", note: "Literally “taker.”" },
+    { term: "Uke",      kanji: "受け",     english: "The one who receives the technique", category: "phases", note: "Literally “receiver” — the partner who is thrown." },
+    { term: "Kuzushi",  kanji: "崩し",     english: "Breaking the balance",     category: "phases", note: "First phase of a throw: off-balancing uke." },
+    { term: "Tsukuri",  kanji: "作り",     english: "Fitting in / positioning", category: "phases", note: "Second phase: entering and setting your body to throw." },
+    { term: "Kake",     kanji: "掛け",     english: "Execution of the throw",   category: "phases", note: "Final phase: completing the technique." },
+    { term: "Ukemi",    kanji: "受け身",   english: "Breakfall(s)",             category: "phases", note: "The skill of falling safely — the first thing every judoka learns." },
+
+    // ── Body Parts (modifiers inside throw names) ─────────────
+    { term: "Ashi",     kanji: "足",       english: "Foot or leg",              category: "body", note: "As in Ashi-waza and De-ashi-barai." },
+    { term: "Te",       kanji: "手",       english: "Hand",                     category: "body", note: "As in Te-waza." },
+    { term: "Koshi · Goshi", kanji: "腰", english: "Hip",                  category: "body", note: "Voiced to “goshi” inside compounds (O-goshi) — a sound change called rendaku." },
+    { term: "Ude",      kanji: "腕",       english: "Arm",                      category: "body", note: "As in Ude-garami." },
+    { term: "Hiza",     kanji: "膝",       english: "Knee",                     category: "body", note: "As in Hiza-guruma." },
+    { term: "Mune",     kanji: "胸",       english: "Chest",                    category: "body", note: "As in Mune-gatame." },
+    { term: "Eri",      kanji: "襟",       english: "Collar / lapel",           category: "body", note: "As in Okuri-eri-jime." },
+    { term: "Sode",     kanji: "袖",       english: "Sleeve",                   category: "body", note: "As in Sode-tsurikomi-goshi." },
+    { term: "Kubi",     kanji: "首",       english: "Neck",                     category: "body", note: "首 is the neck specifically; the head is atama (頭)." },
+
+    // ── Technique (Waza) Categories ───────────────────────────
+    { term: "Nage-waza", kanji: "投技",    english: "Throwing techniques",      category: "waza", note: "The Kodokan recognizes 68 throws (67 before the 2017 revision), divided into te-, koshi-, ashi-, and sutemi-waza." },
+    { term: "Te-waza",   kanji: "手技",    english: "Hand (hand/arm) throws",   category: "waza", note: "e.g. Seoi-nage, Tai-otoshi, Kata-guruma." },
+    { term: "Koshi-waza", kanji: "腰技",   english: "Hip throws",               category: "waza", note: "e.g. O-goshi, Harai-goshi, Uki-goshi." },
+    { term: "Ashi-waza", kanji: "足技",    english: "Foot & leg throws",        category: "waza", note: "e.g. O-soto-gari, De-ashi-barai, Hiza-guruma." },
+    { term: "Sutemi-waza", kanji: "捨身技", english: "Sacrifice throws",        category: "waza", note: "Tori sacrifices their own stance: ma-sutemi (onto the back, e.g. Tomoe-nage) and yoko-sutemi (onto the side, e.g. Tani-otoshi)." },
+    { term: "Katame-waza", kanji: "固技",  english: "Grappling techniques (holds, chokes, locks)", category: "waza", note: "The 32 Kodokan katame-waza (29 before the 2017 revision): osaekomi- (pins), shime- (chokes), and kansetsu-waza (locks)." },
+    { term: "Osaekomi-waza", kanji: "抑込技", english: "Hold-downs / pins",     category: "waza", note: "e.g. Kesa-gatame, Yoko-shiho-gatame." },
+    { term: "Shime-waza", kanji: "絞技",   english: "Strangles & chokes",       category: "waza", note: "e.g. Hadaka-jime, Okuri-eri-jime." },
+    { term: "Kansetsu-waza", kanji: "関節技", english: "Joint locks",           category: "waza", note: "In contest judo, limited to the elbow — e.g. Juji-gatame, Ude-garami." },
+
+    // ── Scoring & Penalties ───────────────────────────────────
+    { term: "Ippon",    kanji: "一本",     english: "Full point — instant win", category: "scoring", note: "Ends the match: a clean throw largely on the back, a 20-second pin, or a submission to a lock or choke." },
+    { term: "Waza-ari", kanji: "技あり",   english: "Half-point score",         category: "scoring", note: "Two waza-ari add up to ippon. Since 2017 it is the only score below ippon (yuko was abolished)." },
+    { term: "Shido",    kanji: "指導",     english: "Penalty for a minor infringement", category: "scoring", note: "A caution for stalling or small rule breaks; a third shido becomes hansoku-make." },
+    { term: "Hansoku-make", kanji: "反則負け", english: "Disqualification",     category: "scoring", note: "The severe penalty / loss — either a third shido or one serious infringement." }
+  ];
+
+  var DATA = {
+    THROWS: THROWS, BELT_ORDER: BELT_ORDER, BELT_META: BELT_META, MODES: MODES,
+    TERMS: TERMS, TERM_CATEGORIES: TERM_CATEGORIES
+  };
 
   if (typeof module !== "undefined" && module.exports) module.exports = DATA;
   else root.JUDO_DATA = DATA;

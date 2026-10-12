@@ -16,6 +16,14 @@
   THROWS.forEach(function (t) { THROW_BY_NAME[t.name] = t; });
   var ALL_NAMES = THROWS.map(function (t) { return t.name; });
 
+  // General vocabulary (not throws) — see the Terms section below.
+  var TERMS = DATA.TERMS || [];
+  var TERM_CATEGORIES = DATA.TERM_CATEGORIES || [];
+  var TERM_CAT_BY_KEY = {};
+  TERM_CATEGORIES.forEach(function (c) { TERM_CAT_BY_KEY[c.key] = c; });
+  var TERM_BY_NAME = {};
+  TERMS.forEach(function (t) { TERM_BY_NAME[t.term] = t; });
+
   function $(id) { return document.getElementById(id); }
   var esc = C.escapeHtml;
 
@@ -92,6 +100,19 @@
     } catch (e) { /* speech is a bonus, never an error */ }
   }
 
+  /* speak a vocabulary term — a Japanese voice reads the kanji/kana,
+     otherwise the romaji is closer */
+  function speakItem(item) {
+    if (!speechOK || !item) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(jaVoice && item.kanji ? item.kanji : item.term);
+      if (jaVoice) { u.voice = jaVoice; u.lang = jaVoice.lang; }
+      u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* speech is a bonus, never an error */ }
+  }
+
   /* ═══════════ State ═══════════ */
 
   var prefs = C.sanitizePrefs(storage.get(KEY.prefs, null), Object.keys(MODES), BELT_ORDER);
@@ -113,7 +134,17 @@
       shuffled: false,
       paused: reducedMotion.matches // reduced-motion users start with GIFs frozen
     },
-    libraryQuery: ""
+    libraryQuery: "",
+    terms: {
+      deck: [],
+      index: 0,
+      flipped: false,
+      query: "",
+      selectedCats: new Set(TERM_CATEGORIES.map(function (c) { return c.key; })),
+      layout: "cards",
+      shuffled: false,
+      order: null
+    }
   };
 
   var timerHandle = null;
@@ -254,7 +285,7 @@
 
   /* ═══════════ View routing ═══════════ */
 
-  var VIEWS = ["home", "study", "library", "quiz", "summary"];
+  var VIEWS = ["home", "study", "library", "terms", "quiz", "summary"];
 
   function setCurrentTab(id, on) {
     if (on) $(id).setAttribute("aria-current", "page");
@@ -263,7 +294,7 @@
 
   function showView(v) {
     // a deferred SW-update reload can now run safely (not mid-quiz/summary)
-    if (pendingSWReload && (v === "home" || v === "study" || v === "library") && swDeferredReload) {
+    if (pendingSWReload && (v === "home" || v === "study" || v === "library" || v === "terms") && swDeferredReload) {
       pendingSWReload = false;
       swDeferredReload();
       return;
@@ -273,10 +304,12 @@
     setCurrentTab("tabHome", v === "home" || v === "quiz" || v === "summary");
     setCurrentTab("tabStudy", v === "study");
     setCurrentTab("tabLibrary", v === "library");
+    setCurrentTab("tabTerms", v === "terms");
     window.scrollTo(0, 0);
     if (v === "home") refreshHome();
     if (v === "study") refreshStudy();
     if (v === "library") renderLibrary();
+    if (v === "terms") refreshTerms();
   }
 
   /* Leaving an in-progress quiz via nav should not be silent. */
@@ -1515,6 +1548,247 @@
     }
   }
 
+  /* ═══════════ Terms (vocabulary flashcards + glossary) ═══════════
+     General judo language, not throws: no images, no belts, no SRS.
+     A lightweight flip-card deck plus a grouped glossary, filterable
+     by category and searchable. Pure logic lives in core.filterTerms. */
+
+  function termCatBadge(term) {
+    var cat = TERM_CAT_BY_KEY[term.category];
+    var color = cat ? cat.color : "#888";
+    var label = cat ? cat.label : term.category;
+    return '<span class="belt-badge"><span class="dot" style="background:' + esc(color) +
+      ';" aria-hidden="true"></span>' + esc(label) + "</span>";
+  }
+
+  function renderTermCatChips() {
+    var host = $("termCatChips");
+    host.innerHTML = "";
+    TERM_CATEGORIES.forEach(function (c) {
+      var count = TERMS.filter(function (t) { return t.category === c.key; }).length;
+      var btn = document.createElement("button");
+      btn.className = "chip";
+      btn.setAttribute("aria-pressed", String(state.terms.selectedCats.has(c.key)));
+      btn.innerHTML =
+        '<span class="dot" style="background:' + esc(c.color) + ';" aria-hidden="true"></span>' +
+        esc(c.label) + ' <span class="count">(' + count + ")</span>";
+      btn.addEventListener("click", function () {
+        var sel = state.terms.selectedCats;
+        if (sel.has(c.key)) sel.delete(c.key); else sel.add(c.key);
+        renderTermCatChips();
+        refreshTerms();
+        // the re-render replaced this chip — put focus back on its successor
+        var again = host.children[TERM_CATEGORIES.indexOf(c)];
+        if (again) again.focus();
+      });
+      host.appendChild(btn);
+    });
+  }
+
+  function computeTermDeck() {
+    // an empty category set yields no terms (mirrors belt chips in Study)
+    return C.filterTerms(TERMS, { query: state.terms.query, categories: state.terms.selectedCats });
+  }
+
+  function indexOfTerm(deck, term) {
+    for (var i = 0; i < deck.length; i++) if (deck[i].term === term.term) return i;
+    return -1;
+  }
+
+  function applyTermLayout() {
+    var cards = state.terms.layout === "cards";
+    $("termCardsWrap").hidden = !cards;
+    $("termGlossary").hidden = cards;
+  }
+
+  function refreshTerms(keepIndex) {
+    var t = state.terms;
+    var current = keepIndex && t.deck.length ? t.deck[t.index] : null;
+    var deck = computeTermDeck();
+    if (t.shuffled && t.order) {
+      deck = deck.slice().sort(function (a, b) { return t.order[a.term] - t.order[b.term]; });
+    }
+    t.deck = deck;
+    t.index = 0;
+    if (current) {
+      var at = indexOfTerm(deck, current);
+      if (at >= 0) t.index = at;
+    }
+    t.flipped = false;
+    applyTermLayout();
+    renderTermCard();
+    renderTermGlossary();
+  }
+
+  function termCardLabel(term, t, count) {
+    if (t.flipped) {
+      return term.term + (term.kanji ? ", " + term.kanji : "") + ". " + term.english + ". " +
+        (term.note || "") + " — press to flip back";
+    }
+    return "Card " + count + ": " + term.term + (term.kanji ? ", " + term.kanji : "") +
+      " — press to flip for the meaning";
+  }
+
+  function announceTerm(text) {
+    var live = $("termLive");
+    if (live) live.textContent = text;
+  }
+
+  function updateTermSpeakBtn(term) {
+    var b = $("termSpeakBtn");
+    if (b) b.hidden = !(speechUsable() && term);
+  }
+
+  function renderTermCard() {
+    var t = state.terms;
+    var card = $("termCard");
+    var empty = $("termEmpty");
+    var deck = t.deck;
+
+    $("termFill").style.width = deck.length ? ((t.index + 1) / deck.length) * 100 + "%" : "0%";
+
+    if (!deck.length) {
+      card.hidden = true;
+      empty.hidden = false;
+      $("termCounts").textContent = "0 terms";
+      updateTermSpeakBtn(null);
+      return;
+    }
+    card.hidden = false;
+    empty.hidden = true;
+
+    var term = deck[t.index];
+    var cat = TERM_CAT_BY_KEY[term.category] || { label: term.category };
+    var count = (t.index + 1) + " / " + deck.length;
+    var touchy = window.matchMedia("(pointer: coarse)").matches;
+
+    $("termFront").innerHTML =
+      termCatBadge(term) +
+      '<span class="card-count">' + count + "</span>" +
+      '<span class="front-word">' + esc(term.term) +
+      (term.kanji ? '<span class="kanji-sub" lang="ja">' + esc(term.kanji) + "</span>" : "") +
+      "</span>" +
+      '<span class="face-hint">' + (touchy ? "tap to flip · swipe for next" : "tap / space to flip") + "</span>";
+
+    $("termBack").innerHTML =
+      '<span class="card-count">' + count + "</span>" +
+      '<span class="back-name">' + esc(term.term) + "</span>" +
+      (term.kanji ? '<span class="back-kanji" lang="ja">' + esc(term.kanji) + "</span>" : "") +
+      '<span class="back-english">' + esc(term.english) + "</span>" +
+      (term.note ? '<span class="term-note">' + esc(term.note) + "</span>" : "") +
+      '<span class="back-group">' + esc(cat.label) + "</span>";
+
+    card.classList.toggle("flipped", t.flipped);
+    card.setAttribute("aria-label", termCardLabel(term, t, count));
+    announceTerm(termCardLabel(term, t, count));
+    $("termCounts").textContent = deck.length + (deck.length === 1 ? " term" : " terms");
+    updateTermSpeakBtn(term);
+  }
+
+  function termFlip() {
+    var t = state.terms;
+    if (!t.deck.length) return;
+    t.flipped = !t.flipped;
+    var card = $("termCard");
+    var term = t.deck[t.index];
+    var label = termCardLabel(term, t, (t.index + 1) + " / " + t.deck.length);
+    card.classList.toggle("flipped", t.flipped);
+    card.setAttribute("aria-label", label);
+    announceTerm(label);
+  }
+
+  function resetTermFlipInstant() {
+    var card = $("termCard");
+    card.style.transition = "none";
+    card.classList.remove("flipped");
+    void card.offsetWidth; // reflow so the un-flip isn't animated
+    card.style.transition = "";
+  }
+
+  function termNav(dir) {
+    var t = state.terms;
+    if (!t.deck.length) return;
+    t.index = (t.index + dir + t.deck.length) % t.deck.length;
+    t.flipped = false;
+    resetTermFlipInstant();
+    var card = $("termCard");
+    card.classList.remove("slide-left", "slide-right");
+    void card.offsetWidth;
+    card.classList.add(dir > 0 ? "slide-left" : "slide-right");
+    renderTermCard();
+  }
+
+  function shuffleTerms() {
+    var t = state.terms;
+    if (!t.deck.length) return;
+    t.shuffled = true;
+    t.order = {};
+    C.shuffle(TERMS).forEach(function (term, i) { t.order[term.term] = i; });
+    t.deck = t.deck.slice().sort(function (a, b) { return t.order[a.term] - t.order[b.term]; });
+    t.index = 0;
+    t.flipped = false;
+    resetTermFlipInstant();
+    renderTermCard();
+    toast("Terms shuffled");
+  }
+
+  function renderTermGlossary() {
+    var host = $("termGlossary");
+    host.innerHTML = "";
+    var matches = computeTermDeck();
+    TERM_CATEGORIES.forEach(function (c) {
+      if (!state.terms.selectedCats.has(c.key)) return;
+      var items = matches.filter(function (t) { return t.category === c.key; });
+      if (!items.length) return;
+      var section = document.createElement("section");
+      section.setAttribute("aria-label", c.label);
+      var grid = document.createElement("div");
+      grid.className = "library-grid";
+      items.forEach(function (term) {
+        var tile = document.createElement("button");
+        tile.className = "throw-tile term-tile";
+        tile.setAttribute("aria-label", term.term + ", " + term.english + " — view details");
+        tile.innerHTML =
+          "<span><span class=\"t-name\">" + esc(term.term) +
+          (term.kanji ? '<span class="t-kanji" lang="ja">' + esc(term.kanji) + "</span>" : "") + "</span>" +
+          '<span class="t-english" style="display:block;">' + esc(term.english) + "</span></span>" +
+          '<span class="t-badges"><span class="cat-dot" style="background:' + esc(c.color) + ';" aria-hidden="true"></span></span>';
+        tile.addEventListener("click", function () { openTermDetail(term.term); });
+        grid.appendChild(tile);
+      });
+      section.innerHTML =
+        '<h2 class="library-group-title"><span class="cat-dot" style="background:' + esc(c.color) +
+        ';" aria-hidden="true"></span>' + esc(c.label) +
+        ' <span class="sub">' + esc(c.sub) + " · " + items.length + (items.length === 1 ? " term" : " terms") + "</span></h2>";
+      section.appendChild(grid);
+      host.appendChild(section);
+    });
+    if (!matches.length) {
+      host.innerHTML = '<div class="empty-note card panel">No terms match your filters.</div>';
+    }
+  }
+
+  function openTermDetail(name) {
+    var term = TERM_BY_NAME[name];
+    if (!term) return;
+    var cat = TERM_CAT_BY_KEY[term.category] || { label: term.category, color: "#888", sub: "" };
+    openModal(term.term, (
+      '<div class="term-detail">' +
+      '<span class="belt-badge term-detail-cat"><span class="dot" style="background:' + esc(cat.color) +
+      ';" aria-hidden="true"></span>' + esc(cat.label) + "</span>" +
+      '<div class="d-name">' + esc(term.term) +
+      (speechUsable() ? ' <button type="button" class="btn ghost icon-btn" id="termDetailSpeakBtn" aria-label="Pronounce ' + esc(term.term) + '"><span aria-hidden="true">🔊</span></button>' : "") +
+      "</div>" +
+      (term.kanji ? '<div class="d-kanji" lang="ja">' + esc(term.kanji) + "</div>" : "") +
+      '<div class="d-english">' + esc(term.english) + "</div>" +
+      (term.note ? '<p class="term-detail-note">' + esc(term.note) + "</p>" : "") +
+      (cat.sub ? '<div class="muted small term-detail-sub">' + esc(cat.label) + " · " + esc(cat.sub) + "</div>" : "") +
+      "</div>"
+    ));
+    var sp = $("termDetailSpeakBtn");
+    if (sp) sp.addEventListener("click", function () { speakItem(term); });
+  }
+
   /* ═══════════ Throw detail modal ═══════════ */
 
   function openThrowDetail(name) {
@@ -1746,7 +2020,11 @@
       ["Space or F", "Flip the card"],
       ["K", "Mark “I know this”"],
       ["R", "Mark “needs review”"],
-      ["S", "Shuffle the deck"]
+      ["S", "Shuffle the deck"],
+      ["Terms", ""],
+      ["← →", "Previous / next term"],
+      ["Space or F", "Flip the term card"],
+      ["S", "Shuffle the terms"]
     ];
     var html = '<div class="shortcut-grid">';
     rows.forEach(function (r) {
@@ -1834,6 +2112,23 @@
         case "s": case "S": shuffleStudy(); break;
       }
     }
+
+    if (state.view === "terms") {
+      switch (e.key) {
+        case "ArrowRight": e.preventDefault(); termNav(1); break;
+        case "ArrowLeft": e.preventDefault(); termNav(-1); break;
+        case " ":
+        case "f":
+        case "F": {
+          var te = document.activeElement;
+          if (te && te !== document.body && te.tagName === "BUTTON" && te.id !== "termCard") return;
+          e.preventDefault();
+          termFlip();
+          break;
+        }
+        case "s": case "S": shuffleTerms(); break;
+      }
+    }
   }
 
   function shuffleStudy() {
@@ -1853,9 +2148,10 @@
 
   /* ═══════════ Swipe (study) ═══════════ */
 
-  function wireSwipe() {
+  function wireSwipe(stageId, nav) {
+    var stage = $(stageId);
+    if (!stage) return;
     var startX = 0, startY = 0, tracking = false;
-    var stage = $("studyStage");
     stage.addEventListener("touchstart", function (e) {
       if (e.touches.length !== 1) return;
       tracking = true;
@@ -1867,7 +2163,7 @@
       tracking = false;
       var dx = e.changedTouches[0].clientX - startX;
       var dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > 50 && Math.abs(dy) < 70) studyNav(dx < 0 ? 1 : -1);
+      if (Math.abs(dx) > 50 && Math.abs(dy) < 70) nav(dx < 0 ? 1 : -1);
     }, { passive: true });
   }
 
@@ -1878,6 +2174,7 @@
     $("tabHome").addEventListener("click", function () { requestView("home"); });
     $("tabStudy").addEventListener("click", function () { requestView("study"); });
     $("tabLibrary").addEventListener("click", function () { requestView("library"); });
+    $("tabTerms").addEventListener("click", function () { requestView("terms"); });
 
     $("themeBtn").addEventListener("click", toggleTheme);
     $("helpBtn").addEventListener("click", openHelp);
@@ -1960,7 +2257,29 @@
       savePrefs();
       refreshStudy(true);
     });
-    wireSwipe();
+    wireSwipe("studyStage", studyNav);
+
+    // terms
+    $("termCard").addEventListener("click", termFlip);
+    $("termFlipBtn").addEventListener("click", termFlip);
+    $("termPrevBtn").addEventListener("click", function () { termNav(-1); });
+    $("termNextBtn").addEventListener("click", function () { termNav(1); });
+    $("termShuffleBtn").addEventListener("click", shuffleTerms);
+    $("termSearch").addEventListener("input", function (e) {
+      state.terms.query = e.target.value;
+      refreshTerms();
+    });
+    $("termLayout").addEventListener("change", function (e) {
+      state.terms.layout = e.target.value;
+      applyTermLayout();
+    });
+    if (speechOK) {
+      $("termSpeakBtn").addEventListener("click", function () {
+        var t = state.terms;
+        if (t.deck.length) speakItem(t.deck[t.index]);
+      });
+    }
+    wireSwipe("termStage", termNav);
 
     // library
     $("librarySearch").addEventListener("input", function (e) {
@@ -2020,6 +2339,7 @@
     $("lengthSelect").value = state.length;
     renderBeltChips();
     renderModeCards();
+    renderTermCatChips();
     wire();
     showView("home");
     registerSW();

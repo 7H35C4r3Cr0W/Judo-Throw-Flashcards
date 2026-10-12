@@ -27,6 +27,7 @@
         <button class="nav-tab" id="tabHome" aria-current="page">Home</button>
         <button class="nav-tab" id="tabStudy">Study</button>
         <button class="nav-tab" id="tabLibrary">Library</button>
+        <button class="nav-tab" id="tabTerms">Terms</button>
       </nav>
 
       <div class="header-actions">
@@ -205,6 +206,55 @@
         <span class="pill" id="libraryCount" aria-live="polite"></span>
       </div>
       <div class="library-groups" id="libraryGroups"></div>
+    </div>
+
+    <!-- ═══════════════ TERMS VIEW ═══════════════ -->
+    <div id="termsView" class="view" hidden>
+      <div class="terms-intro">
+        <h2 class="panel-title-h3" style="margin:0;">Judo vocabulary</h2>
+        <p class="muted small" style="margin:4px 0 0;">The language of the dojo — commands, roles, the phases of a throw, body-part modifiers, the waza families, and contest scoring. Flip the cards, or switch to the glossary to browse.</p>
+      </div>
+
+      <div class="study-toolbar">
+        <div class="chip-row" id="termCatChips" role="group" aria-label="Term categories"></div>
+        <div class="grow"></div>
+        <div class="search-box">
+          <input type="search" id="termSearch" placeholder="Search terms…" aria-label="Search terms" />
+        </div>
+        <select id="termLayout" aria-label="Terms layout">
+          <option value="cards" selected>View: Flashcards</option>
+          <option value="list">View: Glossary</option>
+        </select>
+      </div>
+
+      <!-- Flashcards -->
+      <div id="termCardsWrap">
+        <div class="study-progress" aria-hidden="true"><div class="fill" id="termFill"></div></div>
+        <div class="study-stage" id="termStage">
+          <button class="flashcard term-card" id="termCard" aria-label="Term flashcard — press to flip">
+            <span class="face front" id="termFront"></span>
+            <span class="face back" id="termBack"></span>
+          </button>
+          <div class="study-empty card panel" id="termEmpty" hidden>
+            <h2 class="panel-title-h3">No terms match</h2>
+            <p class="muted">Adjust the categories or search above.</p>
+          </div>
+        </div>
+        <div class="study-controls">
+          <button class="btn" id="termPrevBtn" aria-label="Previous term">←&ensp;Prev</button>
+          <button class="btn primary" id="termFlipBtn">Flip</button>
+          <button class="btn" id="termNextBtn" aria-label="Next term">Next&ensp;→</button>
+          <button class="btn ghost" id="termShuffleBtn">🔀 Shuffle</button>
+          <button class="btn ghost" id="termSpeakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
+        </div>
+        <div class="study-mark-row">
+          <span class="pill" id="termCounts" aria-live="polite"></span>
+        </div>
+        <span class="visually-hidden" id="termLive" aria-live="polite"></span>
+      </div>
+
+      <!-- Glossary -->
+      <div id="termGlossary" class="library-groups" hidden></div>
     </div>
 
     <!-- ═══════════════ QUIZ VIEW ═══════════════ -->

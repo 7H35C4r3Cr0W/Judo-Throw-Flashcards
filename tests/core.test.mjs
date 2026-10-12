@@ -12,7 +12,7 @@ const C = require("../js/core.js");
 const DATA = require("../js/data.js");
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
-const { THROWS, BELT_ORDER, BELT_META, MODES } = DATA;
+const { THROWS, BELT_ORDER, BELT_META, MODES, TERMS, TERM_CATEGORIES } = DATA;
 
 /* ── Data integrity ─────────────────────────────────────────── */
 
@@ -469,4 +469,95 @@ test("filterThrows: belts set restricts results", () => {
   assert.ok(yellow.every((t) => t.belt === "Yellow"));
   const none = C.filterThrows(THROWS, { query: "", belts: new Set() });
   assert.equal(none.length, 0);
+});
+
+/* ── Terms (general vocabulary) ──────────────────────────────── */
+
+test("terms: categories have unique keys and full metadata", () => {
+  const keys = new Set();
+  for (const c of TERM_CATEGORIES) {
+    assert.ok(c.key && c.label && c.sub && c.color, `incomplete category: ${c.key}`);
+    assert.ok(!keys.has(c.key), `duplicate category key: ${c.key}`);
+    keys.add(c.key);
+  }
+  assert.equal(TERM_CATEGORIES.length, 6);
+});
+
+test("terms: every entry is complete, unique, and in a known category", () => {
+  const catKeys = new Set(TERM_CATEGORIES.map((c) => c.key));
+  const names = new Set();
+  for (const t of TERMS) {
+    assert.ok(t.term && t.english && t.category, `incomplete term: ${t.term}`);
+    assert.ok(catKeys.has(t.category), `unknown category ${t.category} on ${t.term}`);
+    assert.ok(!names.has(t.term), `duplicate term: ${t.term}`);
+    names.add(t.term);
+  }
+});
+
+test("terms: category sizes match the deck and every category is used", () => {
+  const count = {};
+  for (const t of TERMS) count[t.category] = (count[t.category] || 0) + 1;
+  assert.deepEqual(count, {
+    etiquette: 12, concepts: 2, phases: 6, body: 9, waza: 9, scoring: 4
+  });
+  assert.equal(TERMS.length, 42);
+  for (const c of TERM_CATEGORIES) {
+    assert.ok(count[c.key] > 0, `category ${c.key} has no terms`);
+  }
+});
+
+test("terms: fact-checked corrections are locked in (no regressions)", () => {
+  const by = (name) => TERMS.find((t) => t.term === name);
+  // "Hajimi" was a misspelling of Hajime and must not reappear
+  assert.ok(!TERMS.some((t) => /hajimi/i.test(t.term)), "stray 'Hajimi' term");
+  assert.ok(by("Hajime"), "single Hajime entry present");
+  // Kubi is the neck, not the head
+  assert.equal(by("Kubi").english, "Neck");
+  // post-2017 Kodokan counts: nage-waza 68, katame-waza 32
+  assert.match(by("Nage-waza").note, /68/);
+  assert.match(by("Katame-waza").note, /32/);
+  // Mate (not "Matte") is the chosen romanization
+  assert.ok(by("Mate") && !by("Matte"), "Mate is the chosen spelling");
+});
+
+test("filterTerms: null categories returns everything, query matches all fields", () => {
+  assert.equal(C.filterTerms(TERMS, { query: "", categories: null }).length, TERMS.length);
+
+  // by romaji — note text matches too (Uchi-komi's note mentions "kuzushi"),
+  // so assert membership, not an exact count
+  const kuzushi = C.filterTerms(TERMS, { query: "kuzushi", categories: null });
+  assert.ok(kuzushi.some((t) => t.term === "Kuzushi"));
+
+  // a term whose romaji is unique across every field matches exactly one
+  const tatami = C.filterTerms(TERMS, { query: "tatami", categories: null });
+  assert.equal(tatami.length, 1);
+  assert.equal(tatami[0].term, "Tatami");
+
+  // by english gloss
+  const hips = C.filterTerms(TERMS, { query: "hip", categories: null });
+  assert.ok(hips.some((t) => t.term === "Koshi · Goshi"));
+  assert.ok(hips.some((t) => t.term === "Koshi-waza"));
+
+  // by kanji (raw, case preserved)
+  const neck = C.filterTerms(TERMS, { query: "首", categories: null });
+  assert.ok(neck.some((t) => t.term === "Kubi"));
+
+  // by note text
+  const rendaku = C.filterTerms(TERMS, { query: "rendaku", categories: null });
+  assert.ok(rendaku.some((t) => t.term === "Koshi · Goshi"));
+});
+
+test("filterTerms: category set restricts, empty set yields none", () => {
+  const scoring = C.filterTerms(TERMS, { query: "", categories: new Set(["scoring"]) });
+  assert.equal(scoring.length, 4);
+  assert.ok(scoring.every((t) => t.category === "scoring"));
+
+  const bodyAndScoring = C.filterTerms(TERMS, { query: "", categories: new Set(["body", "scoring"]) });
+  assert.equal(bodyAndScoring.length, 13);
+
+  assert.equal(C.filterTerms(TERMS, { query: "", categories: new Set() }).length, 0);
+
+  // category + query compose
+  const chokes = C.filterTerms(TERMS, { query: "choke", categories: new Set(["waza"]) });
+  assert.ok(chokes.some((t) => t.term === "Shime-waza"));
 });

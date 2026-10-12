@@ -1,6 +1,6 @@
 # 柔 Judo Throws — Flashcards & Quiz
 
-Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, and a full technique library. Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
+Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, a full technique library, and a **glossary of general judo terms** (commands, roles, the phases of a throw, body-part modifiers, the waza families, and contest scoring). Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
 
 **Live app → https://7h35c4r3cr0w.github.io/Judo-Throw-Flashcards/**
 
@@ -24,7 +24,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 .
 ├── index.html               ← markup for all views
 ├── css/style.css            ← design system (dark "sumi ink" / light "washi paper" themes)
-├── js/data.js               ← the 47 throws (romaji, kanji, English, group, belt)
+├── js/data.js               ← the 47 throws + 42 general terms (romaji, kanji, English)
 ├── js/core.js               ← pure logic: decks, distractors, spaced repetition, sanitizers
 ├── js/app.js                ← state, rendering, wiring
 ├── sw.js                    ← service worker (full offline precache)
@@ -66,6 +66,11 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - All 47 throws grouped by belt, searchable by romaji, kanji, English, or group
 - Tap any throw for the full animation, names, pronunciation, and your personal stats
 - Per-belt **mastery bars** show how much of each group you've locked in
+
+### 🈁 Terms — the language of the dojo
+- **42 general judo terms** (not throws) organized into six categories: **Commands & Etiquette**, **Core Concepts**, **Roles & Phases**, **Body Parts**, **Technique Categories**, and **Scoring & Penalties**
+- Two ways to study: **flashcards** (flip romaji · kanji → meaning, with prev / next / shuffle) or a grouped **glossary** — both filter by category and search across romaji, kanji, meaning, and notes
+- Each term carries its kanji/kana, a concise gloss, and a teaching note; fact-checked against the Kodokan, the IJF rules, and the Wikipedia judo glossary (e.g. the current **68** nage-waza and **32** katame-waza, post-2017 revision)
 
 ### 🔁 Spaced repetition (Leitner)
 - 5 boxes with 0/1/3/7/14-day intervals; correct answers promote, misses demote
