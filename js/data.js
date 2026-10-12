@@ -99,7 +99,7 @@
 
   var TERM_CATEGORIES = [
     { key: "etiquette", label: "Commands & Etiquette", sub: "words heard in the dojo",   color: "#e5484d" },
-    { key: "concepts",  label: "Core Concepts",        sub: "gripping & training",        color: "#f59e0b" },
+    { key: "concepts",  label: "Core Concepts",        sub: "principles, gripping & training", color: "#f59e0b" },
     { key: "phases",    label: "Roles & Phases",       sub: "the anatomy of a throw",     color: "#22c55e" },
     { key: "body",      label: "Body Parts",           sub: "modifiers inside throw names", color: "#3b82f6" },
     { key: "waza",      label: "Technique Categories", sub: "the families of waza",       color: "#a855f7" },
@@ -120,8 +120,14 @@
     { term: "Sensei",   kanji: "先生",     english: "Teacher / instructor",     category: "etiquette", note: "Literally “one who has gone before.”" },
     { term: "Obi",      kanji: "帯",       english: "Belt",                     category: "etiquette", note: "Its colour marks the wearer’s kyu or dan rank." },
     { term: "Tatami",   kanji: "畳",       english: "Mat",                      category: "etiquette", note: "The matted surface judo is trained and contested on." },
+    // the line-up that opens and closes every class
+    { term: "Shomen",   kanji: "正面",     english: "Front of the dojo",        category: "etiquette", note: "The front wall — the place of honour, usually with Kanō’s portrait. The class lines up facing it." },
+    { term: "Ki o tsuke", kanji: "気を付け", english: "Attention!",             category: "etiquette", note: "The call to stand to attention when the class lines up, just before the bows. Also written “kiotsuke.”" },
+    { term: "Shomen ni rei", kanji: "正面に礼", english: "Bow to the front",    category: "etiquette", note: "The first bow of the line-up that opens and closes class, made toward the shomen." },
+    { term: "Sensei ni rei", kanji: "先生に礼", english: "Bow to the teacher",  category: "etiquette", note: "Called right after the bow to the front; often followed by otagai ni rei — bow to each other." },
 
-    // ── Core Concepts (gripping & training) ───────────────────
+    // ── Core Concepts (principles, gripping & training) ───────
+    { term: "Jita Kyoei", kanji: "自他共栄", english: "Mutual welfare and benefit", category: "concepts", note: "One of Kanō’s two guiding principles — mutual prosperity for self and others. Its partner is seiryoku zen’yō (精力善用), maximum efficient use of energy." },
     { term: "Kumi-kata", kanji: "組み方", english: "Gripping method",          category: "concepts", note: "How you take and manage your grips on the judogi before attacking." },
     { term: "Uchi-komi", kanji: "打ち込み", english: "Repetition (fit-in) training", category: "concepts", note: "Drilling a throw’s entry (kuzushi + tsukuri) without completing it — as opposed to nage-komi, which repeats the full throw." },
 

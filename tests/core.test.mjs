@@ -313,6 +313,30 @@ test("SRS functions accept a keyFn so terms can be keyed by .term", () => {
   assert.equal(focus[0].t.term, "A");
 });
 
+test("fmtDueBreakdown: splits the combined due count into throws and terms", () => {
+  assert.equal(C.fmtDueBreakdown(0, 0), "all caught up");
+  assert.equal(C.fmtDueBreakdown(12, 5), "12 throws · 5 terms");
+  assert.equal(C.fmtDueBreakdown(1, 1), "1 throw · 1 term");
+  assert.equal(C.fmtDueBreakdown(3, 0), "3 throws · tap to drill");
+  assert.equal(C.fmtDueBreakdown(0, 1), "1 term · tap to drill");
+});
+
+test("countDue: throws and terms are counted from separate stores", () => {
+  const now = 1_700_000_000_000;
+  const throwSrs = { [THROWS[0].name]: { box: 1, due: now - 1 } };
+  const termSrs = {
+    [TERMS[0].term]: { box: 1, due: now - 1 },
+    [TERMS[1].term]: { box: 1, due: now - 1 },
+    [TERMS[2].term]: { box: 3, due: now + C.DAY_MS }
+  };
+  const key = (t) => t.term;
+  assert.equal(C.countDue(THROWS, throwSrs, now), 1);
+  assert.equal(C.countDue(TERMS, termSrs, now, key), 2);
+  // a term schedule never leaks into the throw count (and vice versa)
+  assert.equal(C.countDue(THROWS, termSrs, now), 0);
+  assert.equal(C.countDue(TERMS, throwSrs, now, key), 0);
+});
+
 /* ── Storage sanitizers ─────────────────────────────────────── */
 
 test("sanitizeHistory: rejects garbage shapes wholesale", () => {
@@ -531,13 +555,31 @@ test("terms: every entry is complete, unique, and in a known category", () => {
   }
 });
 
+test("terms: no term shares a name with a throw (a due drill looks cards up in both sets)", () => {
+  const throwNames = new Set(THROWS.map((t) => t.name.toLowerCase()));
+  for (const t of TERMS) {
+    assert.ok(!throwNames.has(t.term.toLowerCase()), `term collides with a throw name: ${t.term}`);
+    assert.equal(t.name, undefined, `a term must not carry a .name (it is how cards are told apart): ${t.term}`);
+  }
+  for (const t of THROWS) assert.equal(t.term, undefined, `a throw must not carry a .term: ${t.name}`);
+});
+
+test("terms: english glosses are unique, so a multiple-choice question has one right answer", () => {
+  const seen = new Set();
+  for (const t of TERMS) {
+    const g = t.english.toLowerCase();
+    assert.ok(!seen.has(g), `duplicate english gloss: ${t.english}`);
+    seen.add(g);
+  }
+});
+
 test("terms: category sizes match the deck and every category is used", () => {
   const count = {};
   for (const t of TERMS) count[t.category] = (count[t.category] || 0) + 1;
   assert.deepEqual(count, {
-    etiquette: 12, concepts: 2, phases: 6, body: 9, waza: 9, scoring: 4
+    etiquette: 16, concepts: 3, phases: 6, body: 9, waza: 9, scoring: 4
   });
-  assert.equal(TERMS.length, 42);
+  assert.equal(TERMS.length, 47);
   for (const c of TERM_CATEGORIES) {
     assert.ok(count[c.key] > 0, `category ${c.key} has no terms`);
   }
@@ -555,6 +597,13 @@ test("terms: fact-checked corrections are locked in (no regressions)", () => {
   assert.match(by("Katame-waza").note, /32/);
   // Mate (not "Matte") is the chosen romanization
   assert.ok(by("Mate") && !by("Matte"), "Mate is the chosen spelling");
+  // the line-up terms and Kano's principle (second fact-check pass)
+  assert.equal(by("Ki o tsuke").kanji, "気を付け");
+  assert.equal(by("Shomen").kanji, "正面");
+  assert.equal(by("Shomen ni rei").kanji, "正面に礼");
+  assert.equal(by("Sensei ni rei").kanji, "先生に礼");
+  assert.equal(by("Jita Kyoei").kanji, "自他共栄");
+  assert.equal(by("Jita Kyoei").english, "Mutual welfare and benefit");
 });
 
 test("filterTerms: null categories returns everything, query matches all fields", () => {

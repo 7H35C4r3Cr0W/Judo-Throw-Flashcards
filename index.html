@@ -87,11 +87,12 @@
           <div class="stat-value" id="lt-mastered">0 / 47</div>
           <div class="stat-sub">≥80% over 3+ attempts</div>
         </div>
-        <div class="stat-card" id="dueCard">
-          <div class="stat-label">Due for Review</div>
-          <div class="stat-value" id="lt-due">0</div>
-          <div class="stat-sub" id="lt-due-sub">spaced repetition</div>
-        </div>
+        <!-- combined: throws + terms due; one tap drills whatever is due -->
+        <button type="button" class="stat-card" id="dueCard">
+          <span class="stat-label">Due for Review</span>
+          <span class="stat-value" id="lt-due">0</span>
+          <span class="stat-sub" id="lt-due-sub">throws &amp; terms</span>
+        </button>
       </section>
 
       <!-- Recent + Focus -->
@@ -243,7 +244,7 @@
           </button>
           <div class="study-empty card panel" id="termEmpty" hidden>
             <h2 class="panel-title-h3">No terms match</h2>
-            <p class="muted">Adjust the categories or search above.</p>
+            <p class="muted">Adjust the categories, search, or filter above.</p>
           </div>
         </div>
         <div class="study-controls">
@@ -258,21 +259,22 @@
           <button class="btn review" id="termReviewBtn">↻ Needs review</button>
           <span class="pill" id="termCounts" aria-live="polite"></span>
         </div>
-        <div class="term-quiz-bar">
-          <span class="muted small">Test yourself on the selected terms:</span>
-          <label class="visually-hidden" for="termQuizMode">Quiz direction</label>
-          <select id="termQuizMode" aria-label="Quiz direction">
-            <option value="name-to-english" selected>JP → EN (term → meaning)</option>
-            <option value="english-to-name">EN → JP (meaning → term)</option>
-            <option value="mixed">Mixed</option>
-          </select>
-          <button class="btn primary" id="termQuizBtn">🎯 Quiz these terms</button>
-        </div>
-        <span class="visually-hidden" id="termLive" aria-live="polite"></span>
+      </div>
+
+      <!-- Quiz launcher — outside the cards wrapper so the Glossary layout has it too -->
+      <div class="term-quiz-bar">
+        <span class="muted small">Test yourself on the selected terms:</span>
+        <select id="termQuizMode" aria-label="Quiz direction">
+          <option value="name-to-english" selected>JP → EN (term → meaning)</option>
+          <option value="english-to-name">EN → JP (meaning → term)</option>
+          <option value="mixed">Mixed</option>
+        </select>
+        <button class="btn primary" id="termQuizBtn">🎯 Quiz these terms</button>
       </div>
 
       <!-- Glossary -->
       <div id="termGlossary" class="library-groups" hidden></div>
+      <span class="visually-hidden" id="termLive" aria-live="polite"></span>
     </div>
 
     <!-- ═══════════════ QUIZ VIEW ═══════════════ -->

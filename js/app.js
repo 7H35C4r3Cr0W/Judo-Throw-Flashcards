@@ -33,13 +33,21 @@
     if (THROW_BY_NAME[name]) openThrowDetail(name);
     else if (TERM_BY_NAME[name]) openTermDetail(name);
   }
+  // the kind is a property of the CARD, so one quiz can mix throws and terms
+  function isTermCard(c) { return !!(c && c.term); }
   // history/label text for modes not in the throw MODES table
-  var TERM_MODE_LABELS = { "term-mixed": "Terms · Mixed" };
+  var EXTRA_MODE_LABELS = {
+    "term-name-to-english": "🈁 Terms · JP→EN",
+    "term-english-to-name": "🈁 Terms · EN→JP",
+    "term-mixed": "🈁 Terms · Mixed",
+    "due-review": "🔁 Due review"
+  };
   function modeLabel(mode) {
-    return (MODES[mode] && MODES[mode].label) || TERM_MODE_LABELS[mode] || mode;
+    return (MODES[mode] && MODES[mode].label) || EXTRA_MODE_LABELS[mode] || mode;
   }
-  var lastQuizKind = "throws";
-  var lastQuizTermMode = null;
+  // what "Play Again" replays, and where a quiz hands the user back to
+  var lastQuiz = { kind: "throws", termMode: null, names: [] };
+  var quizReturnView = "home";
 
   function $(id) { return document.getElementById(id); }
   var esc = C.escapeHtml;
@@ -324,15 +332,17 @@
     }
     state.view = v;
     VIEWS.forEach(function (name) { $(name + "View").hidden = name !== v; });
-    setCurrentTab("tabHome", v === "home" || v === "quiz" || v === "summary");
-    setCurrentTab("tabStudy", v === "study");
-    setCurrentTab("tabLibrary", v === "library");
-    setCurrentTab("tabTerms", v === "terms");
+    // a quiz/summary belongs to the section it was launched from
+    var tabFor = (v === "quiz" || v === "summary") ? quizReturnView : v;
+    setCurrentTab("tabHome", tabFor === "home");
+    setCurrentTab("tabStudy", tabFor === "study");
+    setCurrentTab("tabLibrary", tabFor === "library");
+    setCurrentTab("tabTerms", tabFor === "terms");
     window.scrollTo(0, 0);
     if (v === "home") refreshHome();
     if (v === "study") refreshStudy();
     if (v === "library") renderLibrary();
-    if (v === "terms") refreshTerms();
+    if (v === "terms") refreshTerms(true); // keep the card the user was on
   }
 
   /* Leaving an in-progress quiz via nav should not be silent. */
@@ -478,10 +488,47 @@
       : "across all questions";
     $("lt-mastered").textContent = C.masteredCount(ts, THROWS) + " / " + TOTAL;
 
-    var due = C.countDue(THROWS, srs, Date.now());
+    // combined: throws and terms each keep their own schedule, one tile sums them
+    var now = Date.now();
+    var throwsDue = C.countDue(THROWS, srs, now);
+    var termsDue = C.countDue(TERMS, getTermSrs(), now, termKey);
+    var due = throwsDue + termsDue;
     $("lt-due").textContent = due;
-    $("lt-due-sub").textContent = due ? "try a Smart Drill" : "all caught up";
-    $("dueCard").classList.toggle("due-highlight", due > 0);
+    $("lt-due-sub").textContent = C.fmtDueBreakdown(throwsDue, termsDue);
+    var dueCard = $("dueCard");
+    dueCard.classList.toggle("due-highlight", due > 0);
+    var dueParts = [];
+    if (throwsDue) dueParts.push(throwsDue + (throwsDue === 1 ? " throw" : " throws"));
+    if (termsDue) dueParts.push(termsDue + (termsDue === 1 ? " term" : " terms"));
+    dueCard.setAttribute("aria-label", due
+      ? "Due for review: " + dueParts.join(", ") + ". Start a drill."
+      : "Due for review: nothing due, all caught up");
+  }
+
+  function countAllDue(now) {
+    return C.countDue(THROWS, getSrs(), now) + C.countDue(TERMS, getTermSrs(), now, termKey);
+  }
+
+  /* One tap on the Due tile drills EVERYTHING that is due — throws and
+     terms together in one session, most overdue first. Each card renders
+     by its own kind, so neither set can starve the other. */
+  function drillDue() {
+    var now = Date.now();
+    var srs = getSrs();
+    var tsrs = getTermSrs();
+    var cards = [];
+    THROWS.forEach(function (t) {
+      var e = srs[t.name];
+      if (e && C.srsIsDue(e, now)) cards.push({ card: t, due: e.due });
+    });
+    TERMS.forEach(function (t) {
+      var e = tsrs[t.term];
+      if (e && C.srsIsDue(e, now)) cards.push({ card: t, due: e.due });
+    });
+    if (!cards.length) { toast("Nothing due — all caught up"); return; }
+    // shuffle first so cards that fell due at the same moment don't come out in data order
+    cards = C.shuffle(cards).sort(function (a, b) { return a.due - b.due; });
+    startQuiz({ deck: cards.map(function (x) { return x.card; }), kind: "due" });
   }
 
   function renderRecentTests() {
@@ -545,10 +592,10 @@
 
   var QUESTION_MODES = ["image-to-name", "english-to-name", "name-to-english"];
 
-  function questionModeFor(quiz) {
-    if (quiz.kind === "terms") {
+  function questionModeFor(quiz, card) {
+    if (isTermCard(card)) {
       // terms have no animation — only the two text directions
-      if (!quiz.mixed) return quiz.termMode;
+      if (quiz.termMode && quiz.termMode !== "mixed") return quiz.termMode;
       return Math.random() < 0.5 ? "name-to-english" : "english-to-name";
     }
     if (quiz.mode !== "smart" && !quiz.mixed) return quiz.mode;
@@ -569,24 +616,33 @@
         ? C.buildSmartDeck(pool, getSrs(), getThrowStats(), state.length, Date.now())
         : C.buildDeck(pool, state.length);
     }
-    var kind = opts.kind === "terms" ? "terms" : "throws";
-    lastQuizKind = kind;
-    lastQuizTermMode = opts.termMode || null;
-    var mode, mixed;
+    // "throws" and "terms" are single-kind quizzes; "due" is the combined
+    // review drill whose deck holds both (each card renders by its own kind)
+    var kind = opts.kind === "terms" || opts.kind === "due" ? opts.kind : "throws";
+    var termMode = null, mode, mixed;
     if (kind === "terms") {
-      mixed = opts.termMode === "mixed";
-      mode = mixed ? "term-mixed" : opts.termMode;
+      termMode = opts.termMode || "name-to-english";
+      mixed = termMode === "mixed";
+      mode = "term-" + termMode; // history label only — direction comes from termMode
+    } else if (kind === "due") {
+      termMode = "mixed";
+      mixed = true;
+      mode = "due-review";
     } else {
       mixed = !!opts.mixed || state.mode === "smart";
       mode = opts.mixed ? "smart" : state.mode;
     }
+    lastQuiz = { kind: kind, termMode: termMode, names: deck.map(nameOf) };
+    quizReturnView = opts.returnTo === "terms" ? "terms" : "home";
+    $("homeBtn").textContent = quizReturnView === "terms" ? "← Terms" : "← Home";
+    $("backBtn").textContent = quizReturnView === "terms" ? "Back to Terms" : "Home";
     state.quiz = {
       id: C.uid(),
       kind: kind,
-      termMode: opts.termMode || null,
+      termMode: termMode,
       mode: mode,
       mixed: mixed,
-      selectedBelts: kind === "terms" ? [] : Array.from(state.selectedBelts),
+      selectedBelts: kind === "throws" ? Array.from(state.selectedBelts) : [],
       deck: deck,
       qIndex: 0,
       score: 0,
@@ -824,8 +880,8 @@
   function renderQuestion() {
     var q = state.quiz;
     var t = q.deck[q.qIndex];
-    q.currentQMode = questionModeFor(q);
-    var isTerms = q.kind === "terms";
+    q.currentQMode = questionModeFor(q, t);
+    var isTerms = isTermCard(t);
     var nm = nameOf(t);
     var noun = isTerms ? "term" : "throw";
 
@@ -1034,7 +1090,7 @@
       q.streak = 0;
     }
 
-    var isTerms = q.kind === "terms";
+    var isTerms = isTermCard(t);
     var nm = nameOf(t);
     var subLabel = isTerms
       ? (TERM_CAT_BY_KEY[t.category] ? TERM_CAT_BY_KEY[t.category].label : t.category)
@@ -1044,7 +1100,7 @@
       name: nm,
       english: t.english,
       kanji: t.kanji,
-      kind: q.kind,
+      kind: isTerms ? "terms" : "throws",
       sub: subLabel,
       belt: isTerms ? null : t.belt,
       img: isTerms ? null : t.img,
@@ -1180,6 +1236,7 @@
       mode: q.mode,
       kind: q.kind,                 // in-memory only (sanitizeHistory drops it) — used by the summary's Retry
       termMode: q.termMode,         // ditto
+      mixed: q.mixed,               // ditto — so Retry keeps a mixed drill mixed
       selectedBelts: q.selectedBelts,
       total: partial ? totalAnswered : q.deck.length,
       score: q.score,
@@ -1211,7 +1268,7 @@
       }).then(function (yes) {
         if (!yes) return;
         abandonQuiz();
-        showView("home");
+        showView(quizReturnView);
       });
       return;
     }
@@ -1262,8 +1319,13 @@
     var wrongPanel = $("wrongPanel");
     var wrongList = $("wrongList");
     wrongPanel.hidden = wrong.length === 0;
+    // rows with an animation are throws; a due drill can hold both kinds
     var wh = $("wrongHint");
-    if (wh) wh.textContent = entry.kind === "terms" ? "Tap a row for the term's details." : "Tap a row to watch the full animation.";
+    var wrongTerms = wrong.filter(function (r) { return !r.img; }).length;
+    if (wh) wh.textContent =
+      wrongTerms === 0 ? "Tap a row to watch the full animation." :
+      wrongTerms === wrong.length ? "Tap a row for the term's details." :
+      "Tap a row for details.";
     wrongList.innerHTML = "";
     wrong.forEach(function (r) {
       var row = document.createElement("button");
@@ -1291,22 +1353,40 @@
     $("retryWrongBtn").dataset.names = JSON.stringify(wrong.map(function (r) { return r.name; }));
     $("retryWrongBtn").dataset.kind = entry.kind || "throws";
     $("retryWrongBtn").dataset.termmode = entry.termMode || "";
+    $("retryWrongBtn").dataset.mixed = entry.mixed ? "1" : "";
+
+    // after a due drill, "again" means whatever is STILL due — and nothing when it's all cleared
+    var again = $("restartBtn");
+    if (entry.kind === "due") {
+      var left = countAllDue(Date.now());
+      again.hidden = left === 0;
+      again.textContent = "Drill what’s still due (" + left + ")";
+    } else {
+      again.hidden = false;
+      again.textContent = "Play Again";
+    }
 
     if (pct === 100 && total > 0) fireConfetti();
   }
 
   function retryWrongOnly() {
+    var btn = $("retryWrongBtn");
     var names;
-    try { names = JSON.parse($("retryWrongBtn").dataset.names || "[]"); } catch (e) { names = []; }
-    if (($("retryWrongBtn").dataset.kind || "throws") === "terms") {
-      var tpool = TERMS.filter(function (t) { return names.indexOf(t.term) !== -1; });
-      if (!tpool.length) return;
-      startQuiz({ deck: C.shuffle(tpool), kind: "terms", termMode: $("retryWrongBtn").dataset.termmode || "name-to-english" });
-      return;
-    }
-    var pool = THROWS.filter(function (t) { return names.indexOf(t.name) !== -1; });
+    try { names = JSON.parse(btn.dataset.names || "[]"); } catch (e) { names = []; }
+    // a missed card is a throw or a term — look each name up in both sets
+    var pool = names.map(function (n) { return THROW_BY_NAME[n] || TERM_BY_NAME[n]; }).filter(Boolean);
     if (!pool.length) return;
-    startQuiz({ deck: C.shuffle(pool), mixed: state.quiz === null && state.mode === "smart" });
+    var kind = btn.dataset.kind || "throws";
+    if (kind === "throws") {
+      startQuiz({ deck: C.shuffle(pool), mixed: btn.dataset.mixed === "1" });
+    } else {
+      startQuiz({
+        deck: C.shuffle(pool),
+        kind: kind,
+        termMode: btn.dataset.termmode || "name-to-english",
+        returnTo: quizReturnView
+      });
+    }
   }
 
   /* ═══════════ Confetti (tiny, dependency-free) ═══════════ */
@@ -1717,9 +1797,12 @@
       if (e && e.flag === "review") review++;
       if (e && C.srsIsDue(e, now)) due++;
     });
-    $("termCounts").textContent =
-      state.terms.deck.length + " terms · " + known + " known · " + review + " to review" +
+    var n = state.terms.deck.length;
+    var txt = n + (n === 1 ? " term · " : " terms · ") + known + " known · " + review + " to review" +
       (due ? " · " + due + " due" : "");
+    // it's a live region — only write when it changes, or every card flip re-announces it
+    var pill = $("termCounts");
+    if (pill.textContent !== txt) pill.textContent = txt;
   }
 
   function indexOfTerm(deck, term) {
@@ -1751,6 +1834,12 @@
     applyTermLayout();
     renderTermCard();
     renderTermGlossary();
+    // the glossary has no card to announce — report the result count instead
+    if (t.layout !== "cards") {
+      announceTerm(deck.length
+        ? deck.length + (deck.length === 1 ? " term" : " terms") + " shown"
+        : "No terms match your filters");
+    }
   }
 
   function termCardLabel(term, t, count) {
@@ -1911,15 +2000,21 @@
     toast("Terms shuffled");
   }
 
+  /* due → unseen → weakest first (spaced repetition), keyed by t.term.
+     Shuffled first so ties don't come out in glossary order every time. */
+  function smartTermDeck(pool) {
+    return C.buildSmartDeck(C.shuffle(pool), getTermSrs(), getTermStats(), "all", Date.now(), undefined, termKey);
+  }
+
   /* Quiz the currently filtered terms. Questions come from the selected
-     categories/search; wrong-answer options are drawn from ALL terms, so
-     even a 2-term filter still yields four choices. */
+     categories/search/filter; wrong-answer options are drawn from ALL
+     terms, so even a 2-term deck still yields four choices. */
   function startTermQuiz(mode) {
-    var pool = computeTermDeck();
-    if (!pool.length) { toast("No terms selected — widen the categories or search"); return; }
-    // order due → unseen → weakest first (spaced repetition), keyed by t.term
-    var deck = C.buildSmartDeck(pool, getTermSrs(), getTermStats(), "all", Date.now(), undefined, termKey);
-    startQuiz({ deck: deck, kind: "terms", termMode: mode });
+    // quiz exactly the deck on screen — recomputing it could drop cards the
+    // user just marked (e.g. under the "Not yet studied" filter)
+    var pool = state.terms.deck.slice();
+    if (!pool.length) { toast("No terms to quiz — widen the categories, search, or filter"); return; }
+    startQuiz({ deck: smartTermDeck(pool), kind: "terms", termMode: mode, returnTo: "terms" });
   }
 
   function renderTermGlossary() {
@@ -1954,7 +2049,7 @@
           "<span><span class=\"t-name\">" + esc(term.term) +
           (term.kanji ? '<span class="t-kanji" lang="ja">' + esc(term.kanji) + "</span>" : "") + "</span>" +
           '<span class="t-english" style="display:block;">' + esc(term.english) + "</span></span>" +
-          '<span class="t-badges"><span class="cat-dot" style="background:' + esc(c.color) + ';" aria-hidden="true"></span>' + badges + "</span>";
+          '<span class="t-badges">' + badges + "</span>"; // the section heading already carries the category colour
         tile.addEventListener("click", function () { openTermDetail(term.term); });
         grid.appendChild(tile);
       });
@@ -2193,9 +2288,10 @@
       storage.set(KEY.history, hist);
       storage.set(KEY.throws, ts);
       storage.set(KEY.srs, srs);
-      // term stats/srs reuse the throw sanitizers (same schema); absent in v2 backups
-      storage.set(KEY.termStats, C.sanitizeThrowStats(data.termStats));
-      storage.set(KEY.termSrs, C.sanitizeSrs(data.termSrs));
+      // term stats/srs reuse the throw sanitizers (same schema). Older (v2)
+      // backups predate terms — importing one must not wipe term progress
+      if (data.termStats !== undefined) storage.set(KEY.termStats, C.sanitizeThrowStats(data.termStats));
+      if (data.termSrs !== undefined) storage.set(KEY.termSrs, C.sanitizeSrs(data.termSrs));
       storage.set(KEY.activity, C.sanitizeActivity(data.activity));
       // exports include prefs — restore them too, then reflect them in the UI
       if (data.prefs) {
@@ -2319,37 +2415,40 @@
       switch (e.key) {
         case "ArrowRight": e.preventDefault(); studyNav(1); break;
         case "ArrowLeft": e.preventDefault(); studyNav(-1); break;
-        case " ":
-        case "f":
-        case "F": {
+        case " ": {
+          // Space belongs to whichever button has focus (Next, Shuffle, …)
           var el = document.activeElement;
           if (el && el !== document.body && el.tagName === "BUTTON" && el.id !== "flashcard") return;
           e.preventDefault();
-          flipCard();
+          if (!e.repeat) flipCard();
           break;
         }
-        case "k": case "K": markCard("known"); break;
-        case "r": case "R": markCard("review"); break;
-        case "s": case "S": shuffleStudy(); break;
+        // F always flips, wherever focus is
+        case "f": case "F": e.preventDefault(); if (!e.repeat) flipCard(); break;
+        // one-shot actions ignore key auto-repeat — a held K must not mark a run of cards
+        case "k": case "K": if (!e.repeat) markCard("known"); break;
+        case "r": case "R": if (!e.repeat) markCard("review"); break;
+        case "s": case "S": if (!e.repeat) shuffleStudy(); break;
       }
     }
 
-    if (state.view === "terms") {
+    // card shortcuts only while the flashcards are showing — in the Glossary
+    // layout the card is hidden, and K/R must never mark a card nobody can see
+    if (state.view === "terms" && state.terms.layout === "cards") {
       switch (e.key) {
         case "ArrowRight": e.preventDefault(); termNav(1); break;
         case "ArrowLeft": e.preventDefault(); termNav(-1); break;
-        case " ":
-        case "f":
-        case "F": {
+        case " ": {
           var te = document.activeElement;
           if (te && te !== document.body && te.tagName === "BUTTON" && te.id !== "termCard") return;
           e.preventDefault();
-          termFlip();
+          if (!e.repeat) termFlip();
           break;
         }
-        case "k": case "K": markTermCard("known"); break;
-        case "r": case "R": markTermCard("review"); break;
-        case "s": case "S": shuffleTerms(); break;
+        case "f": case "F": e.preventDefault(); if (!e.repeat) termFlip(); break;
+        case "k": case "K": if (!e.repeat) markTermCard("known"); break;
+        case "r": case "R": if (!e.repeat) markTermCard("review"); break;
+        case "s": case "S": if (!e.repeat) shuffleTerms(); break;
       }
     }
   }
@@ -2405,6 +2504,7 @@
     $("viewAllHistoryBtn").addEventListener("click", openHistoryList);
 
     $("startBtn").addEventListener("click", function () { startQuiz(); });
+    $("dueCard").addEventListener("click", drillDue);
     $("selectAllBtn").addEventListener("click", function () {
       state.selectedBelts = new Set(BELT_ORDER);
       renderBeltChips(); savePrefs(); updateStartButton();
@@ -2419,7 +2519,7 @@
       updateStartButton();
     });
 
-    $("homeBtn").addEventListener("click", function () { requestView("home"); });
+    $("homeBtn").addEventListener("click", function () { requestView(quizReturnView); });
     $("nextBtn").addEventListener("click", nextQuestion);
     $("quitBtn").addEventListener("click", endNow);
     $("hintBtn").addEventListener("click", useHint);
@@ -2438,12 +2538,25 @@
     });
 
     $("restartBtn").addEventListener("click", function () {
-      // "Play Again" replays the same kind of quiz the user just finished
-      if (lastQuizKind === "terms") startTermQuiz(lastQuizTermMode || "name-to-english");
-      else startQuiz();
+      // "again" replays what the user just did: a due drill re-drills what is
+      // still due, a terms quiz replays the SAME terms (never the Terms tab's
+      // current filters, which may have changed or be empty), and a throws
+      // quiz draws a fresh one from the Home setup as it always has
+      if (lastQuiz.kind === "due") { drillDue(); return; }
+      if (lastQuiz.kind === "terms") {
+        var pool = lastQuiz.names.map(function (n) { return TERM_BY_NAME[n]; }).filter(Boolean);
+        startQuiz({
+          deck: smartTermDeck(pool.length ? pool : TERMS),
+          kind: "terms",
+          termMode: lastQuiz.termMode || "name-to-english",
+          returnTo: quizReturnView
+        });
+        return;
+      }
+      startQuiz();
     });
     $("retryWrongBtn").addEventListener("click", retryWrongOnly);
-    $("backBtn").addEventListener("click", function () { showView("home"); });
+    $("backBtn").addEventListener("click", function () { showView(quizReturnView); });
 
     // study
     $("flashcard").addEventListener("click", flipCard);
@@ -2505,7 +2618,7 @@
     });
     $("termLayout").addEventListener("change", function (e) {
       state.terms.layout = e.target.value;
-      applyTermLayout();
+      refreshTerms(true); // re-render both layouts so badges/filters are never stale
     });
     if (speechOK) {
       $("termSpeakBtn").addEventListener("click", function () {

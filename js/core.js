@@ -215,6 +215,16 @@
     return n;
   }
 
+  /* Subtitle for the Home "Due for Review" tile: the throws/terms
+     split behind the combined count. */
+  function fmtDueBreakdown(throwsDue, termsDue) {
+    if (!throwsDue && !termsDue) return "all caught up";
+    var a = throwsDue + (throwsDue === 1 ? " throw" : " throws");
+    var b = termsDue + (termsDue === 1 ? " term" : " terms");
+    if (throwsDue && termsDue) return a + " · " + b;
+    return (throwsDue ? a : b) + " · tap to drill";
+  }
+
   /* ── Input validation for storage payloads ────────────────────
      localStorage can hold anything (old versions, manual edits,
      corruption). Sanitizers coerce unknown shapes into safe ones
@@ -474,6 +484,7 @@
     srsIsDue: srsIsDue,
     buildSmartDeck: buildSmartDeck,
     countDue: countDue,
+    fmtDueBreakdown: fmtDueBreakdown,
     sanitizeHistory: sanitizeHistory,
     sanitizeThrowStats: sanitizeThrowStats,
     sanitizeSrs: sanitizeSrs,

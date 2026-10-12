@@ -23,3 +23,6 @@ __pycache__/
 # Temporary files
 _kill_server.ps1
 *.tmp
+
+# Local notes (private — never commit)
+directions.txt
