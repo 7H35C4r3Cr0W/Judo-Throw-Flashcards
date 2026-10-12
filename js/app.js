@@ -24,6 +24,21 @@
   var TERM_BY_NAME = {};
   TERMS.forEach(function (t) { TERM_BY_NAME[t.term] = t; });
 
+  // a quiz "card" is a throw or a term — this reads whichever name it has
+  function nameOf(c) { return c && (c.name || c.term); }
+  // dispatch a detail modal by whichever dataset the name belongs to
+  function openCardDetail(name) {
+    if (THROW_BY_NAME[name]) openThrowDetail(name);
+    else if (TERM_BY_NAME[name]) openTermDetail(name);
+  }
+  // history/label text for modes not in the throw MODES table
+  var TERM_MODE_LABELS = { "term-mixed": "Terms · Mixed" };
+  function modeLabel(mode) {
+    return (MODES[mode] && MODES[mode].label) || TERM_MODE_LABELS[mode] || mode;
+  }
+  var lastQuizKind = "throws";
+  var lastQuizTermMode = null;
+
   function $(id) { return document.getElementById(id); }
   var esc = C.escapeHtml;
 
@@ -482,7 +497,7 @@
     row.innerHTML =
       '<span class="history-score ' + cls + '">' + acc + "%</span>" +
       '<span class="history-meta"><span><b>' + h.score + " / " + h.total + "</b> · " +
-      esc((MODES[h.mode] || {}).label || h.mode) + "</span>" +
+      esc(modeLabel(h.mode)) + "</span>" +
       '<span class="when" style="display:block;">' + esc(when) + " · " + C.fmtDuration(h.durationMs) +
       (h.partial ? " · partial" : "") + "</span></span>" +
       '<span class="history-actions" aria-hidden="true">›</span>';
@@ -523,6 +538,11 @@
   var QUESTION_MODES = ["image-to-name", "english-to-name", "name-to-english"];
 
   function questionModeFor(quiz) {
+    if (quiz.kind === "terms") {
+      // terms have no animation — only the two text directions
+      if (!quiz.mixed) return quiz.termMode;
+      return Math.random() < 0.5 ? "name-to-english" : "english-to-name";
+    }
     if (quiz.mode !== "smart" && !quiz.mixed) return quiz.mode;
     // mixed: favour visual recognition, sprinkle both text directions
     var r = Math.random();
@@ -541,11 +561,24 @@
         ? C.buildSmartDeck(pool, getSrs(), getThrowStats(), state.length, Date.now())
         : C.buildDeck(pool, state.length);
     }
+    var kind = opts.kind === "terms" ? "terms" : "throws";
+    lastQuizKind = kind;
+    lastQuizTermMode = opts.termMode || null;
+    var mode, mixed;
+    if (kind === "terms") {
+      mixed = opts.termMode === "mixed";
+      mode = mixed ? "term-mixed" : opts.termMode;
+    } else {
+      mixed = !!opts.mixed || state.mode === "smart";
+      mode = opts.mixed ? "smart" : state.mode;
+    }
     state.quiz = {
       id: C.uid(),
-      mode: opts.mixed ? "smart" : state.mode,
-      mixed: !!opts.mixed || state.mode === "smart",
-      selectedBelts: Array.from(state.selectedBelts),
+      kind: kind,
+      termMode: opts.termMode || null,
+      mode: mode,
+      mixed: mixed,
+      selectedBelts: kind === "terms" ? [] : Array.from(state.selectedBelts),
       deck: deck,
       qIndex: 0,
       score: 0,
@@ -784,13 +817,16 @@
     var q = state.quiz;
     var t = q.deck[q.qIndex];
     q.currentQMode = questionModeFor(q);
+    var isTerms = q.kind === "terms";
+    var nm = nameOf(t);
+    var noun = isTerms ? "term" : "throw";
 
     $("qIndex").textContent = q.qIndex + 1;
     $("score").textContent = q.score;
     updateStreakPill(q.streak);
     setProgress(q.qIndex / q.deck.length);
 
-    $("beltBadge").innerHTML = beltBadgeHtml(t);
+    $("beltBadge").innerHTML = isTerms ? termCatBadge(t) : beltBadgeHtml(t);
 
     var imageWrap = $("imageWrap");
     var img = $("throwImage");
@@ -819,12 +855,12 @@
       loadQuizImage(t.img);
       labelKey = function (x) { return x.name; };
     } else if (q.currentQMode === "english-to-name") {
-      qMain.textContent = 'Which throw means "' + t.english + '"?';
-      hint.textContent = "Pick the correct Japanese name";
+      qMain.textContent = 'Which ' + noun + ' means "' + t.english + '"?';
+      hint.textContent = isTerms ? "Pick the correct term" : "Pick the correct Japanese name";
       imageWrap.style.display = "none";
-      labelKey = function (x) { return x.name; };
+      labelKey = function (x) { return nameOf(x); };
     } else {
-      qMain.textContent = 'What does "' + t.name + '" mean?';
+      qMain.textContent = 'What does "' + nm + '" mean?';
       hint.textContent = "Pick the correct English meaning";
       imageWrap.style.display = "none";
       labelKey = function (x) { return x.english; };
@@ -856,7 +892,9 @@
     } else {
       optsHost.style.display = "";
       typeArea.hidden = true;
-      var distractors = C.pickSmartDistractors(THROWS, t, 3, labelKey);
+      var distractors = isTerms
+        ? C.pickTermDistractors(TERMS, t, 3, labelKey)
+        : C.pickSmartDistractors(THROWS, t, 3, labelKey);
       var options = C.shuffle([t].concat(distractors));
       q.currentCorrectIdx = options.indexOf(t);
       options.forEach(function (item, i) {
@@ -882,7 +920,7 @@
 
     // preload the next GIF so slow connections don't stall the next question
     var next = q.deck[q.qIndex + 1];
-    if (next) { var pre = new Image(); pre.src = next.img; }
+    if (next && next.img) { var pre = new Image(); pre.src = next.img; }
   }
 
   /* ── Hints ─────────────────────────────────────────────────
@@ -895,7 +933,7 @@
     if (!q || q.answered || q.hintLevel >= 2) return;
     q.hintLevel += 1;
     var t = q.deck[q.qIndex];
-    var answerText = q.currentQMode === "name-to-english" ? t.english : t.name;
+    var answerText = q.currentQMode === "name-to-english" ? t.english : nameOf(t);
     var line = $("hintLine");
     line.hidden = false;
     line.textContent = "💡 " + C.maskName(answerText, q.hintLevel);
@@ -988,44 +1026,57 @@
       q.streak = 0;
     }
 
+    var isTerms = q.kind === "terms";
+    var nm = nameOf(t);
+    var subLabel = isTerms
+      ? (TERM_CAT_BY_KEY[t.category] ? TERM_CAT_BY_KEY[t.category].label : t.category)
+      : (t.group + " · " + BELT_META[t.belt].sub);
+
     q.results.push({
-      name: t.name,
+      name: nm,
       english: t.english,
-      belt: t.belt,
-      img: t.img,
+      kanji: t.kanji,
+      kind: q.kind,
+      sub: subLabel,
+      belt: isTerms ? null : t.belt,
+      img: isTerms ? null : t.img,
       mode: q.currentQMode,
       correct: correct,
       chosen: chosenText,
-      correctAnswer: q.currentLabelKey ? q.currentLabelKey(t) : t.name,
+      correctAnswer: q.currentLabelKey ? q.currentLabelKey(t) : nm,
       hints: q.hintLevel || 0,
       ts: Date.now()
     });
 
-    updateThrowStats(t.name, correct);
-    updateSrs(t.name, correct);
+    // terms have no spaced-repetition schedule or per-card stats (throws only)
+    if (!isTerms) {
+      updateThrowStats(t.name, correct);
+      updateSrs(t.name, correct);
+    }
 
     var fb = $("feedback");
     var isVisualish = q.currentQMode === "image-to-name" || q.currentQMode === "type-answer";
-    var showThumb = !isVisualish; // the big animation is already on screen in visual modes
+    var showThumb = !isVisualish && !isTerms; // terms carry no animation
+    var kanjiSpan = t.kanji ? ' <span lang="ja">' + esc(t.kanji) + "</span>" : "";
     fb.className = "feedback show " + (correct ? "ok" : "no");
     fb.innerHTML =
       '<span class="feedback-inner">' +
-      (showThumb ? '<img class="fb-thumb" src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" onerror="this.style.display=\'none\'" />' : "") +
+      (showThumb ? '<img class="fb-thumb" src="' + esc(t.img) + '" alt="Animation of ' + esc(nm) + '" onerror="this.style.display=\'none\'" />' : "") +
       "<span>" +
       (correct
-        ? "✔ Correct! <b>" + esc(t.name) + "</b> <span lang=\"ja\">" + esc(t.kanji) + "</span> — <i>" + esc(t.english) + "</i>"
-        : "✖ The answer is <b>" + esc(t.name) + "</b> <span lang=\"ja\">" + esc(t.kanji) + "</span> — <i>" + esc(t.english) + "</i>") +
-      '<span class="fb-detail" style="display:block;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) +
+        ? "✔ Correct! <b>" + esc(nm) + "</b>" + kanjiSpan + " — <i>" + esc(t.english) + "</i>"
+        : "✖ The answer is <b>" + esc(nm) + "</b>" + kanjiSpan + " — <i>" + esc(t.english) + "</i>") +
+      '<span class="fb-detail" style="display:block;">' + esc(subLabel) +
       (q.hintLevel ? " · 💡 hint used" : "") + "</span>" +
       "</span>" +
-      (speechUsable() ? '<button type="button" class="btn ghost icon-btn fb-speak" id="fbSpeakBtn" aria-label="Pronounce ' + esc(t.name) + '"><span aria-hidden="true">🔊</span></button>' : "") +
+      (speechUsable() ? '<button type="button" class="btn ghost icon-btn fb-speak" id="fbSpeakBtn" aria-label="Pronounce ' + esc(nm) + '"><span aria-hidden="true">🔊</span></button>' : "") +
       "</span>";
     var sp = $("fbSpeakBtn");
-    if (sp) sp.addEventListener("click", function () { speakThrow(t); });
+    if (sp) sp.addEventListener("click", function () { if (isTerms) speakItem(t); else speakThrow(t); });
     freezeGifIfReduced(fb.querySelector(".fb-thumb"));
 
-    // after answering, the alt text may reveal the throw
-    $("throwImage").alt = "Animation of " + t.name;
+    // after answering, the alt text may reveal the throw (visual modes only)
+    if (!isTerms) $("throwImage").alt = "Animation of " + nm;
 
     $("score").textContent = q.score;
     updateStreakPill(q.streak);
@@ -1097,6 +1148,8 @@
       completedAt: completedAt,
       durationMs: completedAt - q.startedAt,
       mode: q.mode,
+      kind: q.kind,                 // in-memory only (sanitizeHistory drops it) — used by the summary's Retry
+      termMode: q.termMode,         // ditto
       selectedBelts: q.selectedBelts,
       total: partial ? totalAnswered : q.deck.length,
       score: q.score,
@@ -1179,19 +1232,26 @@
     var wrongPanel = $("wrongPanel");
     var wrongList = $("wrongList");
     wrongPanel.hidden = wrong.length === 0;
+    var wh = $("wrongHint");
+    if (wh) wh.textContent = entry.kind === "terms" ? "Tap a row for the term's details." : "Tap a row to watch the full animation.";
     wrongList.innerHTML = "";
     wrong.forEach(function (r) {
       var row = document.createElement("button");
       row.className = "wrong-row";
       row.setAttribute("aria-label", r.name + " — view details");
+      // throws show their animation; terms (no image) show a kanji/category chip instead
+      var thumb = r.img
+        ? '<img class="thumb" src="' + esc(r.img) + '" alt="" loading="lazy" ' +
+          "onerror=\"this.outerHTML='<span class=&quot;thumb-placeholder&quot;>no image</span>'\" />"
+        : '<span class="thumb-placeholder term-thumb" lang="ja">' + esc(r.kanji || r.name) + "</span>";
+      var subLabel = r.sub || (BELT_META[r.belt] ? BELT_META[r.belt].label : (r.belt || ""));
       row.innerHTML =
-        '<img class="thumb" src="' + esc(r.img) + '" alt="" loading="lazy" ' +
-        "onerror=\"this.outerHTML='<span class=&quot;thumb-placeholder&quot;>no image</span>'\" />" +
+        thumb +
         "<span><span class=\"name\" style=\"display:block;\">" + esc(r.name) +
         ' <span class="muted small">— ' + esc(r.english) + "</span></span>" +
-        '<span class="muted small" style="display:block;">' + esc(BELT_META[r.belt] ? BELT_META[r.belt].label : r.belt) + "</span>" +
+        '<span class="muted small" style="display:block;">' + esc(subLabel) + "</span>" +
         '<span class="what-i-said">You said <b>' + esc(r.chosen) + "</b> · correct: <b>" + esc(r.correctAnswer) + "</b></span></span>";
-      row.addEventListener("click", function () { openThrowDetail(r.name); });
+      row.addEventListener("click", function () { openCardDetail(r.name); });
       wrongList.appendChild(row);
     });
     // a long wrong-list is a wall of looping GIFs — honor reduced motion here too
@@ -1199,6 +1259,8 @@
 
     $("retryWrongBtn").hidden = wrong.length === 0;
     $("retryWrongBtn").dataset.names = JSON.stringify(wrong.map(function (r) { return r.name; }));
+    $("retryWrongBtn").dataset.kind = entry.kind || "throws";
+    $("retryWrongBtn").dataset.termmode = entry.termMode || "";
 
     if (pct === 100 && total > 0) fireConfetti();
   }
@@ -1206,6 +1268,12 @@
   function retryWrongOnly() {
     var names;
     try { names = JSON.parse($("retryWrongBtn").dataset.names || "[]"); } catch (e) { names = []; }
+    if (($("retryWrongBtn").dataset.kind || "throws") === "terms") {
+      var tpool = TERMS.filter(function (t) { return names.indexOf(t.term) !== -1; });
+      if (!tpool.length) return;
+      startQuiz({ deck: C.shuffle(tpool), kind: "terms", termMode: $("retryWrongBtn").dataset.termmode || "name-to-english" });
+      return;
+    }
     var pool = THROWS.filter(function (t) { return names.indexOf(t.name) !== -1; });
     if (!pool.length) return;
     startQuiz({ deck: C.shuffle(pool), mixed: state.quiz === null && state.mode === "smart" });
@@ -1732,6 +1800,15 @@
     toast("Terms shuffled");
   }
 
+  /* Quiz the currently filtered terms. Questions come from the selected
+     categories/search; wrong-answer options are drawn from ALL terms, so
+     even a 2-term filter still yields four choices. */
+  function startTermQuiz(mode) {
+    var pool = computeTermDeck();
+    if (!pool.length) { toast("No terms selected — widen the categories or search"); return; }
+    startQuiz({ deck: C.shuffle(pool), kind: "terms", termMode: mode });
+  }
+
   function renderTermGlossary() {
     var host = $("termGlossary");
     host.innerHTML = "";
@@ -1896,7 +1973,7 @@
     var html =
       '<div class="history-detail-meta">' +
       '<div class="metric"><span>Score</span><b>' + h.score + "/" + h.total + " (" + acc + "%)</b></div>" +
-      '<div class="metric"><span>Mode</span><b>' + esc((MODES[h.mode] || {}).label || h.mode) + "</b></div>" +
+      '<div class="metric"><span>Mode</span><b>' + esc(modeLabel(h.mode)) + "</b></div>" +
       '<div class="metric"><span>Time</span><b>' + C.fmtDuration(h.durationMs) + "</b></div>" +
       '<div class="metric"><span>Best Streak</span><b>' + (h.bestStreak || 0) + "</b></div>" +
       "</div><div id=\"qaList\"></div>" +
@@ -1917,7 +1994,7 @@
         '<span class="qa-sub" style="display:block;">' +
         (r.correct ? "correct" : "you said “" + esc(r.chosen || "") + "”") +
         (r.hints ? " · 💡×" + r.hints : "") + "</span></span>" +
-        '<span class="qa-pill">' + esc((MODES[r.mode] || {}).label || r.mode || "") + "</span>";
+        '<span class="qa-pill">' + esc(modeLabel(r.mode || "")) + "</span>";
       qaList.appendChild(row);
     });
 
@@ -2214,7 +2291,11 @@
       savePrefs();
     });
 
-    $("restartBtn").addEventListener("click", function () { startQuiz(); });
+    $("restartBtn").addEventListener("click", function () {
+      // "Play Again" replays the same kind of quiz the user just finished
+      if (lastQuizKind === "terms") startTermQuiz(lastQuizTermMode || "name-to-english");
+      else startQuiz();
+    });
     $("retryWrongBtn").addEventListener("click", retryWrongOnly);
     $("backBtn").addEventListener("click", function () { showView("home"); });
 
@@ -2265,6 +2346,7 @@
     $("termPrevBtn").addEventListener("click", function () { termNav(-1); });
     $("termNextBtn").addEventListener("click", function () { termNav(1); });
     $("termShuffleBtn").addEventListener("click", shuffleTerms);
+    $("termQuizBtn").addEventListener("click", function () { startTermQuiz($("termQuizMode").value); });
     $("termSearch").addEventListener("input", function (e) {
       state.terms.query = e.target.value;
       refreshTerms();

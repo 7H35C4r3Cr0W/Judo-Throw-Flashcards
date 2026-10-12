@@ -250,6 +250,16 @@
         <div class="study-mark-row">
           <span class="pill" id="termCounts" aria-live="polite"></span>
         </div>
+        <div class="term-quiz-bar">
+          <span class="muted small">Test yourself on the selected terms:</span>
+          <label class="visually-hidden" for="termQuizMode">Quiz direction</label>
+          <select id="termQuizMode" aria-label="Quiz direction">
+            <option value="name-to-english" selected>JP → EN (term → meaning)</option>
+            <option value="english-to-name">EN → JP (meaning → term)</option>
+            <option value="mixed">Mixed</option>
+          </select>
+          <button class="btn primary" id="termQuizBtn">🎯 Quiz these terms</button>
+        </div>
         <span class="visually-hidden" id="termLive" aria-live="polite"></span>
       </div>
 
@@ -336,7 +346,7 @@
       </section>
       <section class="card panel" id="wrongPanel" hidden>
         <div class="panel-header"><h2 class="panel-title-h3">Review Wrong Answers</h2></div>
-        <p class="muted small" style="margin-top:0;">Tap a row to watch the full animation.</p>
+        <p class="muted small" style="margin-top:0;" id="wrongHint">Tap a row to watch the full animation.</p>
         <div id="wrongList"></div>
       </section>
     </div>

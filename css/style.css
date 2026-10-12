@@ -852,6 +852,25 @@ select {
 }
 .term-detail .term-detail-sub { margin-top: 4px; }
 
+/* quiz launcher under the term cards */
+.term-quiz-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* terms have no animation, so their wrong-answer rows show the kanji instead of a GIF */
+.wrong-row .thumb-placeholder.term-thumb {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--accent-text);
+}
+
 /* ═══════════ Quiz ═══════════ */
 
 .quiz-toolbar {

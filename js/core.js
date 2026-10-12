@@ -409,6 +409,25 @@
     });
   }
 
+  /* Distractors for term quizzes: prefer terms from the SAME category
+     (more confusable than random picks), break ties with jitter, and
+     never repeat the correct answer or a duplicate label. */
+  function pickTermDistractors(pool, correct, n, keyFn, rng) {
+    var random = rng || Math.random;
+    var seen = new Set([keyFn(correct)]);
+    var scored = [];
+    for (var i = 0; i < pool.length; i++) {
+      var t = pool[i];
+      var k = keyFn(t);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      var score = (t.category === correct.category ? 1 : 0) + random() * 0.9;
+      scored.push({ t: t, score: score });
+    }
+    scored.sort(function (a, b) { return b.score - a.score; });
+    return scored.slice(0, n).map(function (s) { return s.t; });
+  }
+
   /* ── Terms (glossary) filtering ──────────────────────────────
      General vocabulary, not throws: no belts/images. Filter by a set
      of category keys (null = all) and a free-text query that matches
@@ -438,6 +457,7 @@
     buildDeck: buildDeck,
     pickDistinct: pickDistinct,
     pickSmartDistractors: pickSmartDistractors,
+    pickTermDistractors: pickTermDistractors,
     aggregateLifetime: aggregateLifetime,
     masteredCount: masteredCount,
     computeFocus: computeFocus,

@@ -172,6 +172,24 @@ test("pickSmartDistractors: works when pool is tiny", () => {
   assert.equal(out.length, 2); // only two other candidates exist
 });
 
+test("pickTermDistractors: distinct, excludes correct, prefers same category", () => {
+  const ippon = TERMS.find((t) => t.term === "Ippon");
+  const out = C.pickTermDistractors(TERMS, ippon, 3, (t) => t.term, () => 0);
+  assert.equal(out.length, 3);
+  const keys = new Set(out.map((t) => t.term));
+  assert.equal(keys.size, 3);
+  assert.ok(!keys.has("Ippon"));
+  // zero jitter → every pick must be from the same category (Scoring has 4 terms → 3 distractors)
+  assert.ok(out.every((t) => t.category === ippon.category));
+});
+
+test("pickTermDistractors: dedupes by the key fn and survives a tiny pool", () => {
+  const pool = TERMS.slice(0, 3);
+  const out = C.pickTermDistractors(pool, pool[0], 3, (t) => t.english);
+  assert.equal(out.length, 2); // only two other candidates
+  assert.ok(!out.some((t) => t.english === pool[0].english));
+});
+
 /* ── Stats aggregation ──────────────────────────────────────── */
 
 test("aggregateLifetime: empty and populated history", () => {
