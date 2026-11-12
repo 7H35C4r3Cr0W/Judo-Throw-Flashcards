@@ -2,7 +2,7 @@
    so it works fully offline after the first visit.
    Bump CACHE_VERSION whenever any precached file changes. */
 
-var CACHE_VERSION = "judo-v2.8.1";
+var CACHE_VERSION = "judo-v2.9.0";
 
 var APP_SHELL = [
   "./",
@@ -67,7 +67,13 @@ var GIFS = [
   "images/technique/dakiwakare.gif",
   "images/technique/hikikomigaeshi.gif",
   "images/technique/tawara_gaeshi.gif",
-  "images/technique/uchi_makikomi.gif"
+  "images/technique/uchi_makikomi.gif",
+  "images/technique/kata_guruma.gif",
+  "images/technique/morote_gari.gif",
+  "images/technique/kibisu_gaeshi.gif",
+  "images/technique/harai_makikomi.gif",
+  "images/technique/sode_tsurikomi_goshi.gif",
+  "images/technique/ippon_seoi_nage.gif"
 ];
 
 /* "no-cache" forces revalidation against the server so a version bump can

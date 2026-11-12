@@ -77,7 +77,8 @@
     srs: "judo_quiz_srs_v1",
     activity: "judo_quiz_activity_v1",
     termStats: "judo_terms_stats_v1",
-    termSrs: "judo_terms_srs_v1"
+    termSrs: "judo_terms_srs_v1",
+    beltsSeen: "judo_quiz_belts_seen_v1"
   };
 
   var storage = {
@@ -112,54 +113,13 @@
     storage.set(KEY.activity, act);
   }
 
-  /* ── Pronunciation (built-in speech synthesis, zero deps) ── */
-
-  var speechOK = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
-  var jaVoice = null;
-
-  /* the API can exist with zero voices installed (common on Linux) —
-     don't render dead 🔊 buttons in that case */
-  function speechUsable() {
-    return speechOK && window.speechSynthesis.getVoices().length > 0;
-  }
-
-  function pickJaVoice() {
-    if (!speechOK) return;
-    jaVoice = null; // voice list can change; never keep a stale voice
-    var voices = window.speechSynthesis.getVoices() || [];
-    for (var i = 0; i < voices.length; i++) {
-      if (/^ja([-_]|$)/i.test(voices[i].lang)) { jaVoice = voices[i]; return; }
-    }
-  }
-
-  function speakThrow(t) {
-    if (!speechOK) return;
-    try {
-      window.speechSynthesis.cancel();
-      // a Japanese voice reads the kanji correctly; otherwise romaji is closer
-      var u = new SpeechSynthesisUtterance(jaVoice ? t.kanji : t.name);
-      if (jaVoice) { u.voice = jaVoice; u.lang = jaVoice.lang; }
-      u.rate = 0.85;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* speech is a bonus, never an error */ }
-  }
-
-  /* speak a vocabulary term — a Japanese voice reads the kanji/kana,
-     otherwise the romaji is closer */
-  function speakItem(item) {
-    if (!speechOK || !item) return;
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(jaVoice && item.kanji ? item.kanji : item.term);
-      if (jaVoice) { u.voice = jaVoice; u.lang = jaVoice.lang; }
-      u.rate = 0.85;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* speech is a bonus, never an error */ }
-  }
-
   /* ═══════════ State ═══════════ */
 
   var prefs = C.sanitizePrefs(storage.get(KEY.prefs, null), Object.keys(MODES), BELT_ORDER);
+  // the six groups that existed before Shinmeisho no Waza was added
+  var beltsSeen = storage.get(KEY.beltsSeen, ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved"]);
+  if (Array.isArray(beltsSeen)) prefs.belts = C.mergeNewBelts(prefs.belts, beltsSeen, BELT_ORDER);
+  storage.set(KEY.beltsSeen, BELT_ORDER.slice());
 
   var state = {
     view: "home",
@@ -1150,10 +1110,7 @@
       '<span class="fb-detail" style="display:block;">' + esc(subLabel) +
       (q.hintLevel ? " · 💡 hint used" : "") + "</span>" +
       "</span>" +
-      (speechUsable() ? '<button type="button" class="btn ghost icon-btn fb-speak" id="fbSpeakBtn" aria-label="Pronounce ' + esc(nm) + '"><span aria-hidden="true">🔊</span></button>' : "") +
       "</span>";
-    var sp = $("fbSpeakBtn");
-    if (sp) sp.addEventListener("click", function () { if (isTerms) speakItem(t); else speakThrow(t); });
     freezeGifIfReduced(fb.querySelector(".fb-thumb"));
 
     // after answering, the alt text may reveal the throw (visual modes only)
@@ -1871,11 +1828,6 @@
     if (live) live.textContent = text;
   }
 
-  function updateTermSpeakBtn(term) {
-    var b = $("termSpeakBtn");
-    if (b) b.hidden = !(speechUsable() && term);
-  }
-
   function renderTermCard() {
     var t = state.terms;
     var card = $("termCard");
@@ -1888,7 +1840,6 @@
       card.hidden = true;
       empty.hidden = false;
       $("termCounts").textContent = "0 terms";
-      updateTermSpeakBtn(null);
       return;
     }
     card.hidden = false;
@@ -1925,7 +1876,6 @@
     $("termReviewBtn").setAttribute("aria-pressed", String(!!(srs && srs.flag === "review")));
 
     updateTermCounts();
-    updateTermSpeakBtn(term);
   }
 
   /* ── Term study marks (spaced repetition) ──────────────────── */
@@ -2095,9 +2045,7 @@
       '<div class="term-detail">' +
       '<span class="belt-badge term-detail-cat"><span class="dot" style="background:' + esc(cat.color) +
       ';" aria-hidden="true"></span>' + esc(cat.label) + "</span>" +
-      '<div class="d-name">' + esc(term.term) +
-      (speechUsable() ? ' <button type="button" class="btn ghost icon-btn" id="termDetailSpeakBtn" aria-label="Pronounce ' + esc(term.term) + '"><span aria-hidden="true">🔊</span></button>' : "") +
-      "</div>" +
+      '<div class="d-name">' + esc(term.term) + "</div>" +
       (term.kanji ? '<div class="d-kanji" lang="ja">' + esc(term.kanji) + "</div>" : "") +
       '<div class="d-english">' + esc(term.english) + "</div>" +
       (term.note ? '<p class="term-detail-note">' + esc(term.note) + "</p>" : "") +
@@ -2109,8 +2057,6 @@
       "</div>" +
       "</div>"
     ));
-    var sp = $("termDetailSpeakBtn");
-    if (sp) sp.addEventListener("click", function () { speakItem(term); });
   }
 
   /* ═══════════ Throw detail modal ═══════════ */
@@ -2130,9 +2076,7 @@
       '<div class="media-controls"><button type="button" class="btn small icon-btn" id="detailPauseBtn" aria-pressed="false" aria-label="Pause animation"><span aria-hidden="true">⏸</span></button></div>' +
       '<img src="' + esc(t.img) + '" alt="Animation of ' + esc(t.name) + '" /></div>' +
       '<div class="detail-names">' +
-      '<div class="d-name">' + esc(t.name) +
-      (speechUsable() ? ' <button type="button" class="btn ghost icon-btn" id="detailSpeakBtn" aria-label="Pronounce ' + esc(t.name) + '"><span aria-hidden="true">🔊</span></button>' : "") +
-      "</div>" +
+      '<div class="d-name">' + esc(t.name) + "</div>" +
       '<div class="d-kanji" lang="ja">' + esc(t.kanji) + "</div>" +
       '<div class="d-english">' + esc(t.english) + "</div>" +
       '<div class="muted small" style="margin-top:6px;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) + "</div>" +
@@ -2159,8 +2103,6 @@
       heroPaused = !heroPaused;
       applyHero();
     });
-    var dsp = $("detailSpeakBtn");
-    if (dsp) dsp.addEventListener("click", function () { speakThrow(t); });
   }
 
   /* ═══════════ History modal ═══════════ */
@@ -2586,20 +2528,6 @@
       state.study.paused = !state.study.paused;
       applyStudyGifState();
     });
-    if (speechOK) {
-      $("speakBtn").addEventListener("click", function () {
-        var s = state.study;
-        if (s.deck.length) speakThrow(s.deck[s.index]);
-      });
-      var refreshSpeech = function () {
-        pickJaVoice();
-        $("speakBtn").hidden = !speechUsable();
-      };
-      refreshSpeech();
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = refreshSpeech;
-      }
-    }
     $("studySearch").addEventListener("input", function (e) {
       state.study.query = e.target.value;
       refreshStudy();
@@ -2636,12 +2564,6 @@
       state.terms.layout = e.target.value;
       refreshTerms(true); // re-render both layouts so badges/filters are never stale
     });
-    if (speechOK) {
-      $("termSpeakBtn").addEventListener("click", function () {
-        var t = state.terms;
-        if (t.deck.length) speakItem(t.deck[t.index]);
-      });
-    }
     wireSwipe("termStage", termNav);
 
     // library

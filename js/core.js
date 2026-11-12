@@ -291,6 +291,16 @@
     return out;
   }
 
+  /* A belt group added after the user saved their selection: if they had
+     every group they knew about selected, select the new ones too, so new
+     throws aren't silently hidden. A deliberate partial selection is kept. */
+  function mergeNewBelts(selected, seen, all) {
+    var fresh = all.filter(function (b) { return seen.indexOf(b) === -1; });
+    if (!fresh.length) return selected.slice();
+    var hadAll = seen.every(function (b) { return all.indexOf(b) === -1 || selected.indexOf(b) !== -1; });
+    return hadAll ? selected.concat(fresh.filter(function (b) { return selected.indexOf(b) === -1; })) : selected.slice();
+  }
+
   function sanitizePrefs(raw, validModes, validBelts) {
     var p = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     var belts = Array.isArray(p.belts)
@@ -505,6 +515,7 @@
     sanitizePrefs: sanitizePrefs,
     filterThrows: filterThrows,
     atjaLabel: atjaLabel,
+    mergeNewBelts: mergeNewBelts,
     filterTerms: filterTerms,
     normalizeAnswer: normalizeAnswer,
     levenshtein: levenshtein,

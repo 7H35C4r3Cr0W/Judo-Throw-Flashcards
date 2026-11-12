@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="description" content="Study the 47 throws of Kodokan Judo — flashcards, quizzes, and spaced repetition. Works offline." />
+<meta name="description" content="Study 53 throws of Kodokan Judo — flashcards, quizzes, and spaced repetition. Works offline." />
 <meta name="theme-color" content="#0c0e13" />
 <title>Judo Throws — Flashcards &amp; Quiz</title>
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
@@ -19,7 +19,7 @@
         <span class="brand-mark" aria-hidden="true">柔</span>
         <span>
           <span class="brand-title">Judo Throws</span>
-          <span class="subtitle">Gokyo no Waza &amp; Habukareta Waza · 47 throws</span>
+          <span class="subtitle">Gokyo, Habukareta &amp; Shinmeisho · 53 throws</span>
         </span>
       </button>
 
@@ -84,7 +84,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-label">Throws Mastered</div>
-          <div class="stat-value" id="lt-mastered">0 / 47</div>
+          <div class="stat-value" id="lt-mastered">0 / 53</div>
           <div class="stat-sub">≥80% over 3+ attempts</div>
         </div>
         <!-- combined: throws + terms due; one tap drills whatever is due -->
@@ -191,7 +191,6 @@
       <div class="study-mark-row">
         <button class="btn know" id="knowBtn">✓ I know this</button>
         <button class="btn review" id="reviewBtn">↻ Needs review</button>
-        <button class="btn ghost" id="speakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         <span class="pill" id="studyCounts" aria-live="polite"></span>
       </div>
       <span class="visually-hidden" id="studyLive" aria-live="polite"></span>
@@ -252,7 +251,6 @@
           <button class="btn primary" id="termFlipBtn">Flip</button>
           <button class="btn" id="termNextBtn" aria-label="Next term">Next&ensp;→</button>
           <button class="btn ghost" id="termShuffleBtn">🔀 Shuffle</button>
-          <button class="btn ghost" id="termSpeakBtn" hidden><span aria-hidden="true">🔊</span> Say it</button>
         </div>
         <div class="study-mark-row">
           <button class="btn know" id="termKnowBtn">✓ I know this</button>

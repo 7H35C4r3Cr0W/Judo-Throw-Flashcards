@@ -16,8 +16,8 @@ const { THROWS, BELT_ORDER, BELT_META, MODES, TERMS, TERM_CATEGORIES, ATJA_KYU }
 
 /* ── Data integrity ─────────────────────────────────────────── */
 
-test("data: exactly 47 throws", () => {
-  assert.equal(THROWS.length, 47);
+test("data: exactly 53 throws", () => {
+  assert.equal(THROWS.length, 53);
 });
 
 test("data: names, images, and kanji are unique and non-empty", () => {
@@ -41,7 +41,8 @@ test("data: every belt is a known belt with metadata", () => {
 test("data: belt ↔ group mapping is consistent", () => {
   const groupOf = {
     Yellow: "Dai Ikkyo", Orange: "Dai Nikyo", Green: "Dai Sankyo",
-    Blue: "Dai Yonkyo", Brown: "Dai Gokyo", Preserved: "Habukareta Waza"
+    Blue: "Dai Yonkyo", Brown: "Dai Gokyo", Preserved: "Habukareta Waza",
+    Shinmeisho: "Shinmeisho no Waza"
   };
   for (const t of THROWS) {
     assert.equal(t.group, groupOf[t.belt], `${t.name}: group ${t.group} vs belt ${t.belt}`);
@@ -54,12 +55,13 @@ test("data: every referenced GIF exists on disk", () => {
   }
 });
 
-test("data: group sizes match the canonical syllabus (Kata Guruma omitted)", () => {
+test("data: group sizes match the canonical syllabus (full Gokyo, 5 Shinmeisho)", () => {
   const count = {};
   for (const t of THROWS) count[t.group] = (count[t.group] || 0) + 1;
   assert.deepEqual(count, {
-    "Dai Ikkyo": 8, "Dai Nikyo": 8, "Dai Sankyo": 7,
-    "Dai Yonkyo": 8, "Dai Gokyo": 8, "Habukareta Waza": 8
+    "Dai Ikkyo": 8, "Dai Nikyo": 8, "Dai Sankyo": 8,
+    "Dai Yonkyo": 8, "Dai Gokyo": 8, "Habukareta Waza": 8,
+    "Shinmeisho no Waza": 5
   });
 });
 
@@ -508,7 +510,7 @@ test("sanitizeActivity keeps only valid ymd keys with positive counts", () => {
 
 test("filterThrows: query matches name, english, kanji, and group", () => {
   const all = C.filterThrows(THROWS, { query: "", belts: null });
-  assert.equal(all.length, 47);
+  assert.equal(all.length, 53);
 
   const byName = C.filterThrows(THROWS, { query: "osoto", belts: null });
   assert.ok(byName.every((t) => t.name.toLowerCase().includes("osoto")));
@@ -654,22 +656,25 @@ test("filterTerms: category set restricts, empty set yields none", () => {
 
 /* ── ATJA kyu curriculum tags ─────────────────────────────────── */
 
-test("atja: 24 throws carry a valid kyu grade and ATJA name, four per grade", () => {
+test("atja: all 25 exam throws are tagged (both Seoi Nage cards share one row)", () => {
   const tagged = THROWS.filter((t) => t.atja);
-  assert.equal(tagged.length, 24); // Kata Guruma (1st kyu) has no animation in the app
+  assert.equal(tagged.length, 26); // the form's "Ippon/Morote Seoi-nage" row tags both cards
   const perKyu = {};
   for (const t of tagged) {
     assert.ok(ATJA_KYU[t.atja.kyu], `unknown ATJA kyu on ${t.name}`);
     assert.ok(t.atja.english && t.atja.english.trim() === t.atja.english, `bad ATJA name on ${t.name}`);
     perKyu[t.atja.kyu] = (perKyu[t.atja.kyu] || 0) + 1;
   }
-  assert.deepEqual(perKyu, { 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4 });
+  assert.deepEqual(perKyu, { 1: 5, 2: 4, 3: 4, 4: 4, 5: 4, 6: 5 });
   const names = new Set(tagged.map((t) => t.atja.english));
-  assert.equal(names.size, 24, "ATJA names are unique");
+  assert.equal(names.size, 25, "ATJA names are unique apart from the shared Seoi-nage row");
   // spot-check against the exam form
   const by = (n) => THROWS.find((t) => t.name === n);
   assert.deepEqual(by("Osoto Gari").atja, { kyu: 6, english: "Major Outside Reaping Throw" });
   assert.deepEqual(by("Tomoe Nage").atja, { kyu: 2, english: "Somersault Throw" });
+  assert.deepEqual(by("Kata Guruma").atja, { kyu: 1, english: "Shoulder Wheel Throw" });
+  assert.deepEqual(by("Kosoto Gake").atja, { kyu: 3, english: "Minor Outer Hook Throw" });
+  assert.equal(by("Ippon Seoi Nage").atja.english, by("Seoi Nage").atja.english);
   assert.equal(by("Obi Otoshi").atja, undefined);
 });
 
@@ -683,7 +688,8 @@ test("atjaLabel: ordinal kyu labels", () => {
 test("filterThrows: finds a belt's ATJA throws by grade, colour, or ATJA name", () => {
   const all = null;
   const sixth = C.filterThrows(THROWS, { query: "6th kyu", belts: all });
-  assert.deepEqual(sixth.map((t) => t.name).sort(), ["Hiza Guruma", "O Goshi", "Osoto Gari", "Seoi Nage"]);
+  assert.deepEqual(sixth.map((t) => t.name).sort(),
+    ["Hiza Guruma", "Ippon Seoi Nage", "O Goshi", "Osoto Gari", "Seoi Nage"]);
   const orange = C.filterThrows(THROWS, { query: "orange", belts: all });
   assert.equal(orange.length, 4);
   assert.ok(orange.every((t) => t.atja.kyu === 5));
@@ -692,4 +698,14 @@ test("filterThrows: finds a belt's ATJA throws by grade, colour, or ATJA name", 
   // the ATJA tag must not swamp ordinary searches
   const beltDrop = C.filterThrows(THROWS, { query: "belt", belts: all });
   assert.deepEqual(beltDrop.map((t) => t.name), ["Obi Otoshi"]);
+});
+
+test("mergeNewBelts: a new group joins an all-selected set, never a partial one", () => {
+  const old = ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved"];
+  const all = old.concat("Shinmeisho");
+  assert.deepEqual(C.mergeNewBelts(old, old, all), all);
+  assert.deepEqual(C.mergeNewBelts(["Yellow", "Green"], old, all), ["Yellow", "Green"]);
+  assert.deepEqual(C.mergeNewBelts([], old, all), []);
+  // already up to date: nothing changes
+  assert.deepEqual(C.mergeNewBelts(["Yellow"], all, all), ["Yellow"]);
 });

@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   Judo throw data — 47 techniques of the Kodokan Gokyo no Waza
-   plus the Habukareta Waza (preserved 1895 techniques).
+   Judo throw data — 53 techniques: the full Kodokan Gokyo no Waza,
+   the Habukareta Waza (preserved 1895 techniques), and five of the
+   Shinmeisho no Waza (newer Kodokan throws) that have animations.
 
    Plain script (no modules) so the app keeps working from file://.
    Exposed as window.JUDO_DATA in the browser and via CommonJS for
@@ -38,6 +39,7 @@
     { name: "Hane Goshi",           kanji: "跳腰",     english: "Spring Hip Throw",            img: "images/technique/hanegoshi.gif",          group: "Dai Sankyo",      belt: "Green" },
     { name: "Harai Tsurikomi Ashi", kanji: "払釣込足", english: "Lift-Pull Foot Sweep",        img: "images/technique/haraitsurikomiashi.gif", group: "Dai Sankyo",      belt: "Green" },
     { name: "Tomoe Nage",           kanji: "巴投",     english: "Circle Throw",                img: "images/technique/tomoe_nage.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 2, english: "Somersault Throw" } },
+    { name: "Kata Guruma",          kanji: "肩車",     english: "Shoulder Wheel",              img: "images/technique/kata_guruma.gif",        group: "Dai Sankyo",      belt: "Green", atja: { kyu: 1, english: "Shoulder Wheel Throw" } },
 
     // ── Dai Yonkyo (4th group) ────────────────────────────────
     { name: "Sumi Gaeshi",          kanji: "隅返",     english: "Corner Reversal",             img: "images/technique/sumi_gaesh.gif",         group: "Dai Yonkyo",      belt: "Blue" },
@@ -67,14 +69,22 @@
     { name: "Daki Wakare",          kanji: "抱分",     english: "Lifting Separation",          img: "images/technique/dakiwakare.gif",         group: "Habukareta Waza", belt: "Preserved" },
     { name: "Hikikomi Gaeshi",      kanji: "引込返",   english: "Pulling-in Reversal",         img: "images/technique/hikikomigaeshi.gif",     group: "Habukareta Waza", belt: "Preserved" },
     { name: "Tawara Gaeshi",        kanji: "俵返",     english: "Rice-Bale Reversal",          img: "images/technique/tawara_gaeshi.gif",      group: "Habukareta Waza", belt: "Preserved" },
-    { name: "Uchi Makikomi",        kanji: "内巻込",   english: "Inner Wraparound Throw",      img: "images/technique/uchi_makikomi.gif",      group: "Habukareta Waza", belt: "Preserved" }
+    { name: "Uchi Makikomi",        kanji: "内巻込",   english: "Inner Wraparound Throw",      img: "images/technique/uchi_makikomi.gif",      group: "Habukareta Waza", belt: "Preserved" },
+
+    // ── Shinmeisho no Waza (newer Kodokan throws, 1982 & 1997) ─
+    // animations from judoinfo.com, redrawn onto white full-size frames
+    { name: "Morote Gari",          kanji: "双手刈",   english: "Two-Hand Reap",               img: "images/technique/morote_gari.gif",        group: "Shinmeisho no Waza", belt: "Shinmeisho" },
+    { name: "Kibisu Gaeshi",        kanji: "踵返",     english: "Heel Reversal",               img: "images/technique/kibisu_gaeshi.gif",      group: "Shinmeisho no Waza", belt: "Shinmeisho" },
+    { name: "Harai Makikomi",       kanji: "払巻込",   english: "Sweeping Wraparound Throw",   img: "images/technique/harai_makikomi.gif",     group: "Shinmeisho no Waza", belt: "Shinmeisho" },
+    { name: "Sode Tsurikomi Goshi", kanji: "袖釣込腰", english: "Sleeve Lift-Pull Hip Throw",  img: "images/technique/sode_tsurikomi_goshi.gif", group: "Shinmeisho no Waza", belt: "Shinmeisho" },
+    { name: "Ippon Seoi Nage",      kanji: "一本背負投", english: "One-Arm Shoulder Throw",    img: "images/technique/ippon_seoi_nage.gif",    group: "Shinmeisho no Waza", belt: "Shinmeisho", atja: { kyu: 6, english: "Shoulder Throw" } }
   ];
 
   /* ATJA Judo Kyu Curriculum (v2.0): the senior grade at which each throw
      is first tested, and ATJA's own English name for it (kept as written —
      it is what students see on the exam form — except Kosoto Gake, whose
-     "Minor Outer Dash Throw" is a typo for Hook). 24 of its 25 throws are
-     here; Kata Guruma (1st kyu) has no working animation. */
+     "Minor Outer Dash Throw" is a typo for Hook). All 25 of its throws are
+     here; its "Ippon/Morote Seoi-nage" row tags both Seoi Nage cards. */
   var ATJA_KYU = {
     6: { label: "6th kyu", belt: "Yellow", color: "#eab308" },
     5: { label: "5th kyu", belt: "Orange", color: "#f97316" },
@@ -84,7 +94,7 @@
     1: { label: "1st kyu", belt: "Brown",  color: "#a16207" }
   };
 
-  var BELT_ORDER = ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved"];
+  var BELT_ORDER = ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved", "Shinmeisho"];
 
   var BELT_META = {
     Yellow:    { label: "Dai Ikkyo",       sub: "1st group",           color: "#eab308" },
@@ -92,7 +102,8 @@
     Green:     { label: "Dai Sankyo",      sub: "3rd group",           color: "#22c55e" },
     Blue:      { label: "Dai Yonkyo",      sub: "4th group",           color: "#3b82f6" },
     Brown:     { label: "Dai Gokyo",       sub: "5th group",           color: "#a16207" },
-    Preserved: { label: "Habukareta Waza", sub: "preserved 1895",      color: "#94a3b8" }
+    Preserved: { label: "Habukareta Waza", sub: "preserved 1895",      color: "#94a3b8" },
+    Shinmeisho: { label: "Shinmeisho no Waza", sub: "newer Kodokan throws", color: "#14b8a6" }
   };
 
   var MODES = {

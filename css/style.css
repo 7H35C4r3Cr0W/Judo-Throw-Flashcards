@@ -41,6 +41,7 @@
   --belt-blue: #3b82f6;
   --belt-brown: #a16207;
   --belt-preserved: #94a3b8;
+  --belt-shinmeisho: #14b8a6;
 
   --card-face: #ffffff;
   --pattern-ink: rgba(255, 255, 255, 0.022);
@@ -86,6 +87,7 @@
 
   --belt-yellow: #a87b03;
   --belt-preserved: #64748b;
+  --belt-shinmeisho: #0f766e;
 
   --card-face: #ffffff;
   --pattern-ink: rgba(35, 38, 46, 0.035);
@@ -491,6 +493,7 @@ button.stat-card.due-highlight::after {
 .dot[data-belt="Blue"]      { background: var(--belt-blue); }
 .dot[data-belt="Brown"]     { background: var(--belt-brown); }
 .dot[data-belt="Preserved"] { background: var(--belt-preserved); }
+.dot[data-belt="Shinmeisho"] { background: var(--belt-shinmeisho); }
 
 .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mode-card {
@@ -1664,11 +1667,10 @@ button.focus-row:hover, button.wrong-row:hover {
   transition: width 0.5s var(--ease-out);
 }
 
-/* ═══════════ Feedback speak button ═══════════ */
+/* ═══════════ Feedback layout ═══════════ */
 
-.fb-speak { flex: none; align-self: center; }
 .feedback-inner { width: 100%; }
-.feedback-inner > span:not(.fb-speak) { flex: 1; }
+.feedback-inner > span { flex: 1; }
 
 /* ═══════════ Option entrance stagger ═══════════ */
 

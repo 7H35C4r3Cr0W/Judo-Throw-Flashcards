@@ -1,6 +1,6 @@
 # 柔 Judo Throws — Flashcards & Quiz
 
-Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, a full technique library, and a **glossary of general judo terms** (commands, roles, the phases of a throw, breakfalls, stances and footwork, the words throw names are built from, the waza families, and contest scoring). Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
+Study **53 throws of Kodokan judo** — the full **Gokyo no Waza**, the **Habukareta Waza**, and five of the **Shinmeisho no Waza** — flip-card studying, five quiz modes, spaced repetition, a full technique library, and a **glossary of general judo terms** (commands, roles, the phases of a throw, breakfalls, stances and footwork, the words throw names are built from, the waza families, and contest scoring). Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
 
 **Live app → https://7h35c4r3cr0w.github.io/Judo-Throw-Flashcards/**
 
@@ -24,13 +24,13 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 .
 ├── index.html               ← markup for all views
 ├── css/style.css            ← design system (dark "sumi ink" / light "washi paper" themes)
-├── js/data.js               ← the 47 throws (+ ATJA kyu tags) + 102 general terms (romaji, kanji, English)
+├── js/data.js               ← the 53 throws (+ ATJA kyu tags) + 102 general terms (romaji, kanji, English)
 ├── js/core.js               ← pure logic: decks, distractors, spaced repetition, sanitizers
 ├── js/app.js                ← state, rendering, wiring
 ├── sw.js                    ← service worker (full offline precache)
 ├── manifest.webmanifest     ← PWA install metadata
 ├── icons/                   ← 柔 hanko app icon (SVG + PNG)
-├── images/technique/        ← 47 throw animations (.gif)
+├── images/technique/        ← 53 throw animations (.gif)
 ├── kano_jigoro.jpg          ← Kanō Jigorō portrait
 ├── tests/core.test.mjs      ← unit tests (node --test, zero dependencies)
 └── download_images.ps1      ← optional: re-download GIFs from the source
@@ -64,8 +64,8 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - Answers update the spaced-repetition schedule automatically
 
 ### 🗂 Library
-- All 47 throws grouped by belt, searchable by romaji, kanji, English, or group
-- Tap any throw for the full animation, names, pronunciation, and your personal stats
+- All 53 throws grouped by belt, searchable by romaji, kanji, English, or group
+- Tap any throw for the full animation, names, and your personal stats
 - Per-belt **mastery bars** show how much of each group you've locked in
 
 ### 🈁 Terms — the language of the dojo
@@ -87,9 +87,6 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - "Throws to Focus On" — your weakest throws, with a one-tap **🎯 Drill these**
 - **Export / import** all data as JSON from the History dialog (your stats aren't hostage to one browser)
 
-### 🔊 Pronunciation
-- "Say it" buttons speak each throw's name using your device's built-in speech (a Japanese voice reads the kanji when available) — no downloads, works offline
-
 ### Design & accessibility
 - Dark **sumi-ink** and light **washi-paper** themes (follows your system, toggleable)
 - Keyboard-first: press **?** for the shortcut list
@@ -105,7 +102,7 @@ Everything is local. No analytics, no server calls. Data lives in `localStorage`
   glowing zone, and send them ragdolling across the tatami
 - Referee calls — **IPPON! / WAZA-ARI! / YUKO / MATTE** — with confetti, dust,
   and a very dizzy uke
-- Every throw is named after one of the real 47 (kanji included), and you earn
+- Every throw is named after a real Gokyo or Habukareta throw (kanji included), and you earn
   belt ranks one ippon at a time (progress saved locally)
 - Works with touch, mouse, or **Space** — and it never traps page scrolling on mobile
 
@@ -128,14 +125,15 @@ Everything is local. No analytics, no server calls. Data lives in `localStorage`
 
 ## The throws
 
-47 of the 68 recognized Kodokan throws — the full **Gokyo no Waza** (minus Kata Guruma, whose source animation is broken) plus all 8 **Habukareta Waza** (techniques preserved from the 1895 list):
+53 of the 68 recognized Kodokan throws — the full **Gokyo no Waza**, all 8 **Habukareta Waza** (techniques preserved from the 1895 list), and the 5 **Shinmeisho no Waza** (newer Kodokan throws) that have a clean animation:
 
 - **Dai Ikkyo** (1st group) — 8 throws
 - **Dai Nikyo** (2nd group) — 8 throws
-- **Dai Sankyo** (3rd group) — 7 throws
+- **Dai Sankyo** (3rd group) — 8 throws
 - **Dai Yonkyo** (4th group) — 8 throws
 - **Dai Gokyo** (5th group) — 8 throws
 - **Habukareta Waza** (preserved) — 8 throws
+- **Shinmeisho no Waza** (newer) — 5 throws: Morote Gari, Kibisu Gaeshi, Harai Makikomi, Sode Tsurikomi Goshi, Ippon Seoi Nage
 
 The belt-color grouping (Yellow → Brown) is a common club convention for the five Gokyo sets, not a Kodokan standard.
 
@@ -165,7 +163,7 @@ python3 -m http.server 8080
 
 ## Credits
 
-- **Throw animations** courtesy of [judo-caja.com](https://judo-caja.com/techniques.html).
+- **Throw animations** courtesy of [judo-caja.com](https://judo-caja.com/techniques.html); Kata Guruma and the Shinmeisho no Waza from [judoinfo.com](https://judoinfo.com/?p=180), redrawn onto clean full-size frames.
 - **Portrait of Kanō Jigorō** via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Portrait_of_late_Mr._Kano.jpg) (public domain).
 - **Technique list** from [Wikipedia: Kodokan Judo techniques](https://en.wikipedia.org/wiki/List_of_Kodokan_Judo_techniques).
 - **Kyu grades & ATJA names** from the ATJA Judo Kyu Curriculum (v2.0), the syllabus CAJA tests to.
