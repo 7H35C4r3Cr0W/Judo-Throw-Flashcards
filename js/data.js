@@ -11,43 +11,43 @@
 
   var THROWS = [
     // ── Dai Ikkyo (1st group) ─────────────────────────────────
-    { name: "Deashi Harai",         kanji: "出足払",   english: "Forward Foot Sweep",          img: "images/technique/deashibarai.gif",        group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Hiza Guruma",          kanji: "膝車",     english: "Knee Wheel",                  img: "images/technique/hizaguruma.gif",         group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Sasae Tsurikomi Ashi", kanji: "支釣込足", english: "Supporting Foot Lift-Pull",   img: "images/technique/sasaetsu.gif",           group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Uki Goshi",            kanji: "浮腰",     english: "Floating Hip",                img: "images/technique/uki_goshi.gif",          group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Osoto Gari",           kanji: "大外刈",   english: "Large Outer Reap",            img: "images/technique/osoto_gari.gif",         group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "O Goshi",              kanji: "大腰",     english: "Large Hip Throw",             img: "images/technique/ogoshi.gif",             group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Ouchi Gari",           kanji: "大内刈",   english: "Large Inner Reap",            img: "images/technique/ouchi_gari.gif",         group: "Dai Ikkyo",       belt: "Yellow" },
-    { name: "Seoi Nage",            kanji: "背負投",   english: "Shoulder Throw",              img: "images/technique/seoi-nage.gif",          group: "Dai Ikkyo",       belt: "Yellow" },
+    { name: "Deashi Harai",         kanji: "出足払",   english: "Forward Foot Sweep",          img: "images/technique/deashibarai.gif",        group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 5, english: "Advanced Foot Sweep" } },
+    { name: "Hiza Guruma",          kanji: "膝車",     english: "Knee Wheel",                  img: "images/technique/hizaguruma.gif",         group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 6, english: "Knee Wheel Throw" } },
+    { name: "Sasae Tsurikomi Ashi", kanji: "支釣込足", english: "Supporting Foot Lift-Pull",   img: "images/technique/sasaetsu.gif",           group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 5, english: "Propping-Lifting Foot Sweep" } },
+    { name: "Uki Goshi",            kanji: "浮腰",     english: "Floating Hip",                img: "images/technique/uki_goshi.gif",          group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 5, english: "Floating Hip Throw" } },
+    { name: "Osoto Gari",           kanji: "大外刈",   english: "Large Outer Reap",            img: "images/technique/osoto_gari.gif",         group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 6, english: "Major Outside Reaping Throw" } },
+    { name: "O Goshi",              kanji: "大腰",     english: "Large Hip Throw",             img: "images/technique/ogoshi.gif",             group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 6, english: "Major Hip Throw" } },
+    { name: "Ouchi Gari",           kanji: "大内刈",   english: "Large Inner Reap",            img: "images/technique/ouchi_gari.gif",         group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 5, english: "Major Inside Reaping Throw" } },
+    { name: "Seoi Nage",            kanji: "背負投",   english: "Shoulder Throw",              img: "images/technique/seoi-nage.gif",          group: "Dai Ikkyo",       belt: "Yellow", atja: { kyu: 6, english: "Shoulder Throw" } },
 
     // ── Dai Nikyo (2nd group) ─────────────────────────────────
-    { name: "Kosoto Gari",          kanji: "小外刈",   english: "Small Outer Reap",            img: "images/technique/kosotogari.gif",         group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Kouchi Gari",          kanji: "小内刈",   english: "Small Inner Reap",            img: "images/technique/kouchigari.gif",         group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Koshi Guruma",         kanji: "腰車",     english: "Hip Wheel",                   img: "images/technique/koshiguruma.gif",        group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Tsurikomi Goshi",      kanji: "釣込腰",   english: "Lift-Pull Hip Throw",         img: "images/technique/tsurikomi_goshi.gif",    group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Okuriashi Harai",      kanji: "送足払",   english: "Following Foot Sweep",        img: "images/technique/okuriash_Haraii.gif",    group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Tai Otoshi",           kanji: "体落",     english: "Body Drop",                   img: "images/technique/tai_otoshi.gif",         group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Harai Goshi",          kanji: "払腰",     english: "Sweeping Hip Throw",          img: "images/technique/hara_igoshi.gif",        group: "Dai Nikyo",       belt: "Orange" },
-    { name: "Uchi Mata",            kanji: "内股",     english: "Inner Thigh Throw",           img: "images/technique/uchi_mata.gif",          group: "Dai Nikyo",       belt: "Orange" },
+    { name: "Kosoto Gari",          kanji: "小外刈",   english: "Small Outer Reap",            img: "images/technique/kosotogari.gif",         group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 4, english: "Minor Outer Reaping Throw" } },
+    { name: "Kouchi Gari",          kanji: "小内刈",   english: "Small Inner Reap",            img: "images/technique/kouchigari.gif",         group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 4, english: "Minor Inner Reaping Throw" } },
+    { name: "Koshi Guruma",         kanji: "腰車",     english: "Hip Wheel",                   img: "images/technique/koshiguruma.gif",        group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 3, english: "Hip Wheel Throw" } },
+    { name: "Tsurikomi Goshi",      kanji: "釣込腰",   english: "Lift-Pull Hip Throw",         img: "images/technique/tsurikomi_goshi.gif",    group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 2, english: "Propping-Lifting Hip Throw" } },
+    { name: "Okuriashi Harai",      kanji: "送足払",   english: "Following Foot Sweep",        img: "images/technique/okuriash_Haraii.gif",    group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 2, english: "Sliding Foot Sweep" } },
+    { name: "Tai Otoshi",           kanji: "体落",     english: "Body Drop",                   img: "images/technique/tai_otoshi.gif",         group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 4, english: "Forward Body Drop Throw" } },
+    { name: "Harai Goshi",          kanji: "払腰",     english: "Sweeping Hip Throw",          img: "images/technique/hara_igoshi.gif",        group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 4, english: "Sweeping Loin Throw" } },
+    { name: "Uchi Mata",            kanji: "内股",     english: "Inner Thigh Throw",           img: "images/technique/uchi_mata.gif",          group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 3, english: "Inner Thigh Sweep" } },
 
     // ── Dai Sankyo (3rd group) ────────────────────────────────
-    { name: "Kosoto Gake",          kanji: "小外掛",   english: "Small Outer Hook",            img: "images/technique/kosotogake.gif",         group: "Dai Sankyo",      belt: "Green" },
-    { name: "Tsuri Goshi",          kanji: "釣腰",     english: "Lifting Hip Throw",           img: "images/technique/tsuri_goshi.gif",        group: "Dai Sankyo",      belt: "Green" },
-    { name: "Yoko Otoshi",          kanji: "横落",     english: "Side Drop",                   img: "images/technique/yoko_otoshi.gif",        group: "Dai Sankyo",      belt: "Green" },
-    { name: "Ashi Guruma",          kanji: "足車",     english: "Leg Wheel",                   img: "images/technique/ashiguruma.gif",         group: "Dai Sankyo",      belt: "Green" },
+    { name: "Kosoto Gake",          kanji: "小外掛",   english: "Small Outer Hook",            img: "images/technique/kosotogake.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 3, english: "Minor Outer Dash Throw" } },
+    { name: "Tsuri Goshi",          kanji: "釣腰",     english: "Lifting Hip Throw",           img: "images/technique/tsuri_goshi.gif",        group: "Dai Sankyo",      belt: "Green", atja: { kyu: 3, english: "Lifting Hip Throw" } },
+    { name: "Yoko Otoshi",          kanji: "横落",     english: "Side Drop",                   img: "images/technique/yoko_otoshi.gif",        group: "Dai Sankyo",      belt: "Green", atja: { kyu: 1, english: "Lateral Drop Throw" } },
+    { name: "Ashi Guruma",          kanji: "足車",     english: "Leg Wheel",                   img: "images/technique/ashiguruma.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 2, english: "Leg Wheel Throw" } },
     { name: "Hane Goshi",           kanji: "跳腰",     english: "Spring Hip Throw",            img: "images/technique/hanegoshi.gif",          group: "Dai Sankyo",      belt: "Green" },
     { name: "Harai Tsurikomi Ashi", kanji: "払釣込足", english: "Lift-Pull Foot Sweep",        img: "images/technique/haraitsurikomiashi.gif", group: "Dai Sankyo",      belt: "Green" },
-    { name: "Tomoe Nage",           kanji: "巴投",     english: "Circle Throw",                img: "images/technique/tomoe_nage.gif",         group: "Dai Sankyo",      belt: "Green" },
+    { name: "Tomoe Nage",           kanji: "巴投",     english: "Circle Throw",                img: "images/technique/tomoe_nage.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 2, english: "Somersault Throw" } },
 
     // ── Dai Yonkyo (4th group) ────────────────────────────────
     { name: "Sumi Gaeshi",          kanji: "隅返",     english: "Corner Reversal",             img: "images/technique/sumi_gaesh.gif",         group: "Dai Yonkyo",      belt: "Blue" },
-    { name: "Tani Otoshi",          kanji: "谷落",     english: "Valley Drop",                 img: "images/technique/tani_otoshi.gif",        group: "Dai Yonkyo",      belt: "Blue" },
+    { name: "Tani Otoshi",          kanji: "谷落",     english: "Valley Drop",                 img: "images/technique/tani_otoshi.gif",        group: "Dai Yonkyo",      belt: "Blue", atja: { kyu: 1, english: "Valley Drop Throw" } },
     { name: "Hane Makikomi",        kanji: "跳巻込",   english: "Spring Wraparound Throw",     img: "images/technique/hanemakikomi.gif",       group: "Dai Yonkyo",      belt: "Blue" },
     { name: "Sukui Nage",           kanji: "掬投",     english: "Scoop Throw",                 img: "images/technique/sukui_nage.gif",         group: "Dai Yonkyo",      belt: "Blue" },
     { name: "Utsuri Goshi",         kanji: "移腰",     english: "Shifting Hip Throw",          img: "images/technique/utsuri_goshi.gif",       group: "Dai Yonkyo",      belt: "Blue" },
     { name: "O Guruma",             kanji: "大車",     english: "Large Wheel",                 img: "images/technique/oguruma.gif",            group: "Dai Yonkyo",      belt: "Blue" },
-    { name: "Soto Makikomi",        kanji: "外巻込",   english: "Outer Wraparound Throw",      img: "images/technique/soto_makikomi.gif",      group: "Dai Yonkyo",      belt: "Blue" },
-    { name: "Uki Otoshi",           kanji: "浮落",     english: "Floating Drop",               img: "images/technique/uki_otoshi.gif",         group: "Dai Yonkyo",      belt: "Blue" },
+    { name: "Soto Makikomi",        kanji: "外巻込",   english: "Outer Wraparound Throw",      img: "images/technique/soto_makikomi.gif",      group: "Dai Yonkyo",      belt: "Blue", atja: { kyu: 1, english: "Outer Winding Throw" } },
+    { name: "Uki Otoshi",           kanji: "浮落",     english: "Floating Drop",               img: "images/technique/uki_otoshi.gif",         group: "Dai Yonkyo",      belt: "Blue", atja: { kyu: 1, english: "Floating Drop Throw" } },
 
     // ── Dai Gokyo (5th group) ─────────────────────────────────
     { name: "Osoto Guruma",         kanji: "大外車",   english: "Large Outer Wheel",           img: "images/technique/osoto_guruma.gif",       group: "Dai Gokyo",       belt: "Brown" },
@@ -69,6 +69,19 @@
     { name: "Tawara Gaeshi",        kanji: "俵返",     english: "Rice-Bale Reversal",          img: "images/technique/tawara_gaeshi.gif",      group: "Habukareta Waza", belt: "Preserved" },
     { name: "Uchi Makikomi",        kanji: "内巻込",   english: "Inner Wraparound Throw",      img: "images/technique/uchi_makikomi.gif",      group: "Habukareta Waza", belt: "Preserved" }
   ];
+
+  /* ATJA Judo Kyu Curriculum (v2.0): the senior grade at which each throw
+     is first tested, and ATJA's own English name for it (kept verbatim —
+     it is what students see on the exam form). 24 of its 25 throws are
+     here; Kata Guruma (1st kyu) has no working animation. */
+  var ATJA_KYU = {
+    6: { label: "6th kyu", belt: "Yellow", color: "#eab308" },
+    5: { label: "5th kyu", belt: "Orange", color: "#f97316" },
+    4: { label: "4th kyu", belt: "Green",  color: "#22c55e" },
+    3: { label: "3rd kyu", belt: "Brown",  color: "#a16207" },
+    2: { label: "2nd kyu", belt: "Brown",  color: "#a16207" },
+    1: { label: "1st kyu", belt: "Brown",  color: "#a16207" }
+  };
 
   var BELT_ORDER = ["Yellow", "Orange", "Green", "Blue", "Brown", "Preserved"];
 
@@ -107,6 +120,7 @@
     { key: "body",      label: "Body & Direction",     sub: "modifiers inside technique names", color: "#3b82f6" },
     { key: "names",     label: "Reading Throw Names",  sub: "decode any throw, word by word", color: "#f97316" },
     { key: "waza",      label: "Technique Categories", sub: "the families of waza",       color: "#a855f7" },
+    { key: "katame",    label: "Pins, Chokes & Locks", sub: "the ATJA kyu grappling list", color: "#c2855a" },
     { key: "scoring",   label: "Scoring & Penalties",  sub: "in shiai (contest)",         color: "#ec4899" }
   ];
 
@@ -150,10 +164,10 @@
     { term: "Kime",     kanji: "極め",     english: "Finishing with control",   category: "phases", note: "Often taught as a fourth phase after kake: following through and keeping control as uke lands." },
 
     // ── Fundamentals (falls, stances & footwork) ──────────────
-    { term: "Ushiro ukemi", kanji: "後ろ受身", english: "Back breakfall",       category: "basics", note: "Fall straight back with the chin tucked, slapping the mat with both arms." },
+    { term: "Ushiro ukemi", kanji: "後ろ受身", english: "Back breakfall",       category: "basics", note: "Fall straight back with the chin tucked, slapping the mat with both arms. Called kōhō ukemi (後方受身) on the ATJA exam — 6th kyu." },
     { term: "Yoko ukemi", kanji: "横受身", english: "Side breakfall",           category: "basics", note: "Fall onto your side, slapping with the arm on the side you land on." },
     { term: "Mae ukemi", kanji: "前受身",  english: "Front breakfall",          category: "basics", note: "Fall forward onto forearms and palms, face turned away from the mat." },
-    { term: "Mae mawari ukemi", kanji: "前回り受身", english: "Forward rolling breakfall", category: "basics", note: "Roll diagonally over one shoulder and finish with a side slap. Also called zenpō kaiten ukemi." },
+    { term: "Mae mawari ukemi", kanji: "前回り受身", english: "Forward rolling breakfall", category: "basics", note: "Roll diagonally over one shoulder and finish with a side slap. Also called zenpō kaiten ukemi — its name on the ATJA exam (5th kyu)." },
     { term: "Shizentai", kanji: "自然体",  english: "Natural posture",          category: "basics", note: "Upright and relaxed. Shizen hontai stands square; migi and hidari shizentai lead with the right or left foot." },
     { term: "Jigotai",  kanji: "自護体",   english: "Defensive posture",        category: "basics", note: "Wide, low, knees bent. Jigo hontai stands square; migi and hidari jigotai lead with the right or left foot." },
     { term: "Ayumi ashi", kanji: "歩み足", english: "Walking steps",            category: "basics", note: "The feet pass each other, as in ordinary walking." },
@@ -200,6 +214,29 @@
     { term: "Osaekomi-waza", kanji: "抑込技", english: "Hold-downs / pins",     category: "waza", note: "e.g. Kesa-gatame, Yoko-shiho-gatame." },
     { term: "Shime-waza", kanji: "絞技",   english: "Strangles & chokes",       category: "waza", note: "e.g. Hadaka-jime, Okuri-eri-jime." },
     { term: "Kansetsu-waza", kanji: "関節技", english: "Joint locks",           category: "waza", note: "In contest judo, limited to the elbow — e.g. Juji-gatame, Ude-garami." },
+    { term: "Tachi-waza", kanji: "立技",   english: "Standing techniques",      category: "waza", note: "Throws made from standing — te-, koshi- and ashi-waza. The first half of the ATJA kyu exam." },
+    { term: "Renraku-waza", kanji: "連絡技", english: "Combination techniques", category: "waza", note: "Linking one attack into the next. Spelled “renwaku waza” on the ATJA exam form." },
+    { term: "Kaeshi-waza", kanji: "返し技", english: "Counter techniques",      category: "waza", note: "Turning uke’s own attack back against them. Every ATJA kyu grade tests at least one." },
+    { term: "Fusegi-waza", kanji: "防ぎ技", english: "Hold-down escapes",       category: "waza", note: "Escaping a pin — the ATJA exam’s name for the hold-escape drills." },
+
+    // ── Pins, Chokes & Locks (ATJA Judo Kyu Curriculum v2.0) ──
+    { term: "Kesa-gatame", kanji: "袈裟固", english: "Scarf hold",              category: "katame", note: "Pinning from the side, one arm around uke’s neck and their near arm trapped. ATJA 6th kyu." },
+    { term: "Yoko-shiho-gatame", kanji: "横四方固", english: "Side four-corner hold", category: "katame", note: "Pinning across uke’s chest from the side. ATJA 5th kyu." },
+    { term: "Kami-shiho-gatame", kanji: "上四方固", english: "Upper four-corner hold", category: "katame", note: "Pinning from above uke’s head, gripping the belt on both sides. ATJA 5th kyu." },
+    { term: "Kuzure-kesa-gatame", kanji: "崩袈裟固", english: "Modified scarf hold", category: "katame", note: "Kesa-gatame with the arm under uke’s far armpit instead of around the neck. ATJA 4th kyu." },
+    { term: "Kuzure-yoko-shiho-gatame", kanji: "崩横四方固", english: "Modified side four-corner hold", category: "katame", note: "A variation of yoko-shiho-gatame. ATJA 3rd kyu." },
+    { term: "Kata-gatame", kanji: "肩固",   english: "Shoulder hold",            category: "katame", note: "Uke’s arm and head are locked together against their own shoulder. ATJA 2nd kyu." },
+    { term: "Hadaka-jime", kanji: "裸絞",   english: "Naked choke",              category: "katame", note: "From behind with the forearm, without using the gi — hence “naked.” ATJA 6th kyu." },
+    { term: "Juji-jime", kanji: "十字絞",   english: "Cross choke",              category: "katame", note: "Hands crossed, gripping both lapels. Three forms: nami (normal), kata (half) and gyaku (reverse). ATJA 5th kyu." },
+    { term: "Okuri-eri-jime", kanji: "送襟絞", english: "Sliding lapel choke",   category: "katame", note: "From behind, both hands working the lapels. ATJA 4th kyu." },
+    { term: "Kataha-jime", kanji: "片羽絞", english: "Single-wing choke",        category: "katame", note: "From behind, one arm lifts uke’s arm like a wing while the other chokes with the lapel. The ATJA form calls it the single shoulder choke; 3rd kyu." },
+    { term: "Ryote-jime", kanji: "両手絞",  english: "Two-hand lapel choke",     category: "katame", note: "A choke using both hands on the lapels. ATJA 2nd kyu." },
+    { term: "Sankaku-jime", kanji: "三角絞", english: "Triangle choke",          category: "katame", note: "The legs lock in a figure-4 around uke’s neck and one arm. ATJA 1st kyu." },
+    { term: "Ude-garami", kanji: "腕緘",    english: "Bent arm lock",            category: "katame", note: "Also called the entangled arm lock. ATJA 5th kyu (seniors only — juniors skip arm locks)." },
+    { term: "Ude-gatame", kanji: "腕固",    english: "Straight arm lock",        category: "katame", note: "Full name ude-hishigi-ude-gatame (hishigi = crush). ATJA 4th kyu." },
+    { term: "Juji-gatame", kanji: "十字固", english: "Cross arm lock",           category: "katame", note: "Full name ude-hishigi-juji-gatame — lying at a right angle across uke, arm straightened between the legs. ATJA 3rd kyu." },
+    { term: "Hiza-gatame", kanji: "膝固",   english: "Knee arm lock",            category: "katame", note: "Full name ude-hishigi-hiza-gatame — the knee levers against uke’s straightened elbow. ATJA 2nd kyu." },
+    { term: "Sankaku-gatame", kanji: "三角固", english: "Triangle arm lock",     category: "katame", note: "Full name ude-hishigi-sankaku-gatame — the elbow is locked from the triangle position. ATJA 1st kyu." },
 
     // ── Scoring & Penalties ───────────────────────────────────
     { term: "Ippon",    kanji: "一本",     english: "Full point — instant win", category: "scoring", note: "Ends the match: a clean throw largely on the back, a 20-second pin, or a submission to a lock or choke." },
@@ -211,7 +248,7 @@
   ];
 
   var DATA = {
-    THROWS: THROWS, BELT_ORDER: BELT_ORDER, BELT_META: BELT_META, MODES: MODES,
+    THROWS: THROWS, BELT_ORDER: BELT_ORDER, BELT_META: BELT_META, MODES: MODES, ATJA_KYU: ATJA_KYU,
     TERMS: TERMS, TERM_CATEGORIES: TERM_CATEGORIES
   };
 

@@ -413,6 +413,19 @@
 
   /* ── Study-deck filtering ────────────────────────────────── */
 
+  /* ATJA kyu-exam tag as searchable text, so "6th kyu", "atja", the belt
+     colour ("yellow") or ATJA's own English name all find a throw. */
+  var ATJA_BELT = { 6: "yellow", 5: "orange", 4: "green", 3: "brown", 2: "brown", 1: "brown" };
+  function atjaLabel(kyu) {
+    var suf = kyu === 1 ? "st" : kyu === 2 ? "nd" : kyu === 3 ? "rd" : "th";
+    return kyu + suf + " kyu";
+  }
+  function atjaSearchText(t) {
+    if (!t.atja) return "";
+    return ("atja " + atjaLabel(t.atja.kyu) + " " + ATJA_BELT[t.atja.kyu] + " " +
+      t.atja.english).toLowerCase();
+  }
+
   function filterThrows(throws, opts) {
     var q = (opts.query || "").trim().toLowerCase();
     var belts = opts.belts; // Set or null = all
@@ -422,7 +435,8 @@
       return t.name.toLowerCase().indexOf(q) !== -1 ||
         t.english.toLowerCase().indexOf(q) !== -1 ||
         (t.kanji && t.kanji.indexOf(opts.query.trim()) !== -1) ||
-        t.group.toLowerCase().indexOf(q) !== -1;
+        t.group.toLowerCase().indexOf(q) !== -1 ||
+        atjaSearchText(t).indexOf(q) !== -1;
     });
   }
 
@@ -490,6 +504,7 @@
     sanitizeSrs: sanitizeSrs,
     sanitizePrefs: sanitizePrefs,
     filterThrows: filterThrows,
+    atjaLabel: atjaLabel,
     filterTerms: filterTerms,
     normalizeAnswer: normalizeAnswer,
     levenshtein: levenshtein,

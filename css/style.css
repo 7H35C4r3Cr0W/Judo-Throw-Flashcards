@@ -750,6 +750,25 @@ select {
 .back .back-kanji { font-size: 20px; color: var(--accent-text); font-family: var(--font-display); }
 .back .back-english { font-size: 16px; color: var(--text); font-style: italic; }
 .back .back-group { color: var(--muted); font-size: 13px; }
+/* ATJA kyu grade + ATJA's English name — one quiet line under the group */
+.back .back-atja,
+.detail-names .d-atja {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 3px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+}
+.detail-names .d-atja { margin-top: 8px; }
+.back-atja .dot,
+.d-atja .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .back img.throw-gif,
 .back canvas.throw-gif { height: 170px; }
 .back .back-stats {

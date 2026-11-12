@@ -10,6 +10,20 @@
   var THROWS = DATA.THROWS;
   var BELT_ORDER = DATA.BELT_ORDER;
   var BELT_META = DATA.BELT_META;
+  var ATJA_KYU = DATA.ATJA_KYU || {};
+
+  /* "ATJA 6th kyu · Major Outside Reaping Throw" — the grade where the club's
+     curriculum first tests a throw, plus ATJA's own English name for it. */
+  function atjaHtml(t) {
+    var k = t.atja && ATJA_KYU[t.atja.kyu];
+    if (!k) return "";
+    return '<span class="dot" style="background:' + esc(k.color) + '" aria-hidden="true"></span>' +
+      "<span>ATJA " + esc(k.label) + " · " + esc(t.atja.english) + "</span>";
+  }
+  function atjaText(t) {
+    var k = t.atja && ATJA_KYU[t.atja.kyu];
+    return k ? "ATJA " + k.label + " (" + k.belt.toLowerCase() + " belt): " + t.atja.english : "";
+  }
   var MODES = DATA.MODES;
   var TOTAL = THROWS.length;
   var THROW_BY_NAME = {};
@@ -1526,6 +1540,7 @@
       '<span class="back-kanji" lang="ja">' + esc(t.kanji) + "</span>" +
       '<span class="back-english">' + esc(t.english) + "</span>" +
       '<span class="back-group">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) + "</span>" +
+      (t.atja ? '<span class="back-atja">' + atjaHtml(t) + "</span>" : "") +
       '<span class="back-stats">' + studyStatsPills(t) + "</span>";
 
     card.classList.toggle("flipped", s.flipped);
@@ -1562,7 +1577,7 @@
   function cardLabel(t, s, count) {
     if (s.flipped) {
       return t.name + ", " + t.kanji + ", " + t.english + ". " + t.group +
-        ", " + BELT_META[t.belt].sub + " — press to flip back";
+        ", " + BELT_META[t.belt].sub + (t.atja ? ". " + atjaText(t) : "") + " — press to flip back";
     }
     var front =
       s.front === "name" ? t.name + ", " + t.kanji :
@@ -2121,6 +2136,7 @@
       '<div class="d-kanji" lang="ja">' + esc(t.kanji) + "</div>" +
       '<div class="d-english">' + esc(t.english) + "</div>" +
       '<div class="muted small" style="margin-top:6px;">' + esc(t.group) + " · " + esc(BELT_META[t.belt].sub) + "</div>" +
+      (t.atja ? '<div class="d-atja">' + atjaHtml(t) + "</div>" : "") +
       "</div>" +
       '<div class="detail-stats">' +
       '<div class="metric"><span>Accuracy</span><b>' + acc + "</b></div>" +

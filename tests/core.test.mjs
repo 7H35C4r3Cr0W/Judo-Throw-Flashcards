@@ -12,7 +12,7 @@ const C = require("../js/core.js");
 const DATA = require("../js/data.js");
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
-const { THROWS, BELT_ORDER, BELT_META, MODES, TERMS, TERM_CATEGORIES } = DATA;
+const { THROWS, BELT_ORDER, BELT_META, MODES, TERMS, TERM_CATEGORIES, ATJA_KYU } = DATA;
 
 /* ── Data integrity ─────────────────────────────────────────── */
 
@@ -541,7 +541,7 @@ test("terms: categories have unique keys and full metadata", () => {
     assert.ok(!keys.has(c.key), `duplicate category key: ${c.key}`);
     keys.add(c.key);
   }
-  assert.equal(TERM_CATEGORIES.length, 8);
+  assert.equal(TERM_CATEGORIES.length, 9);
 });
 
 test("terms: every entry is complete, unique, and in a known category", () => {
@@ -577,9 +577,9 @@ test("terms: category sizes match the deck and every category is used", () => {
   const count = {};
   for (const t of TERMS) count[t.category] = (count[t.category] || 0) + 1;
   assert.deepEqual(count, {
-    etiquette: 19, concepts: 5, phases: 7, basics: 9, body: 15, names: 11, waza: 9, scoring: 6
+    etiquette: 19, concepts: 5, phases: 7, basics: 9, body: 15, names: 11, waza: 13, katame: 17, scoring: 6
   });
-  assert.equal(TERMS.length, 81);
+  assert.equal(TERMS.length, 102);
   for (const c of TERM_CATEGORIES) {
     assert.ok(count[c.key] > 0, `category ${c.key} has no terms`);
   }
@@ -650,4 +650,46 @@ test("filterTerms: category set restricts, empty set yields none", () => {
   // category + query compose
   const chokes = C.filterTerms(TERMS, { query: "choke", categories: new Set(["waza"]) });
   assert.ok(chokes.some((t) => t.term === "Shime-waza"));
+});
+
+/* ── ATJA kyu curriculum tags ─────────────────────────────────── */
+
+test("atja: 24 throws carry a valid kyu grade and ATJA name, four per grade", () => {
+  const tagged = THROWS.filter((t) => t.atja);
+  assert.equal(tagged.length, 24); // Kata Guruma (1st kyu) has no animation in the app
+  const perKyu = {};
+  for (const t of tagged) {
+    assert.ok(ATJA_KYU[t.atja.kyu], `unknown ATJA kyu on ${t.name}`);
+    assert.ok(t.atja.english && t.atja.english.trim() === t.atja.english, `bad ATJA name on ${t.name}`);
+    perKyu[t.atja.kyu] = (perKyu[t.atja.kyu] || 0) + 1;
+  }
+  assert.deepEqual(perKyu, { 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4 });
+  const names = new Set(tagged.map((t) => t.atja.english));
+  assert.equal(names.size, 24, "ATJA names are unique");
+  // spot-check against the exam form
+  const by = (n) => THROWS.find((t) => t.name === n);
+  assert.deepEqual(by("Osoto Gari").atja, { kyu: 6, english: "Major Outside Reaping Throw" });
+  assert.deepEqual(by("Tomoe Nage").atja, { kyu: 2, english: "Somersault Throw" });
+  assert.equal(by("Obi Otoshi").atja, undefined);
+});
+
+test("atjaLabel: ordinal kyu labels", () => {
+  assert.equal(C.atjaLabel(1), "1st kyu");
+  assert.equal(C.atjaLabel(2), "2nd kyu");
+  assert.equal(C.atjaLabel(3), "3rd kyu");
+  assert.equal(C.atjaLabel(6), "6th kyu");
+});
+
+test("filterThrows: finds a belt's ATJA throws by grade, colour, or ATJA name", () => {
+  const all = null;
+  const sixth = C.filterThrows(THROWS, { query: "6th kyu", belts: all });
+  assert.deepEqual(sixth.map((t) => t.name).sort(), ["Hiza Guruma", "O Goshi", "Osoto Gari", "Seoi Nage"]);
+  const orange = C.filterThrows(THROWS, { query: "orange", belts: all });
+  assert.equal(orange.length, 4);
+  assert.ok(orange.every((t) => t.atja.kyu === 5));
+  const somersault = C.filterThrows(THROWS, { query: "somersault", belts: all });
+  assert.deepEqual(somersault.map((t) => t.name), ["Tomoe Nage"]);
+  // the ATJA tag must not swamp ordinary searches
+  const beltDrop = C.filterThrows(THROWS, { query: "belt", belts: all });
+  assert.deepEqual(beltDrop.map((t) => t.name), ["Obi Otoshi"]);
 });

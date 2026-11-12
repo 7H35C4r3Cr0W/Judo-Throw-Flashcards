@@ -24,7 +24,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 .
 ├── index.html               ← markup for all views
 ├── css/style.css            ← design system (dark "sumi ink" / light "washi paper" themes)
-├── js/data.js               ← the 47 throws + 81 general terms (romaji, kanji, English)
+├── js/data.js               ← the 47 throws (+ ATJA kyu tags) + 102 general terms (romaji, kanji, English)
 ├── js/core.js               ← pure logic: decks, distractors, spaced repetition, sanitizers
 ├── js/app.js                ← state, rendering, wiring
 ├── sw.js                    ← service worker (full offline precache)
@@ -42,6 +42,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 
 ### 📇 Study — real flashcards
 - 3D flip cards: animation on the front, name · kanji · meaning · group on the back
+- **ATJA kyu tags** — 24 throws show the grade where the ATJA Judo Kyu Curriculum first tests them, with ATJA's own English name (e.g. *ATJA 6th kyu · Major Outside Reaping Throw*). Search **“6th kyu”**, **“orange”**, or an ATJA name to pull up just that belt's throws
 - Choose the front: **Animation**, **Japanese name**, or **English meaning**
 - **← / →** browse, **Space** flip, swipe on mobile, shuffle
 - Mark cards **✓ I know this** / **↻ Needs review** — marks feed the spaced-repetition scheduler
@@ -68,7 +69,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - Per-belt **mastery bars** show how much of each group you've locked in
 
 ### 🈁 Terms — the language of the dojo
-- **81 general judo terms** (not throws) organized into eight categories: **Commands & Etiquette**, **Core Concepts**, **Roles & Phases**, **Fundamentals** (breakfalls, stances, footwork), **Body & Direction**, **Reading Throw Names** (o · ko · soto · uchi · gari · harai…, so any throw's name translates itself), **Technique Categories**, and **Scoring & Penalties**
+- **102 general judo terms** (not throws) organized into nine categories: **Commands & Etiquette**, **Core Concepts**, **Roles & Phases**, **Fundamentals** (breakfalls, stances, footwork), **Body & Direction**, **Reading Throw Names** (o · ko · soto · uchi · gari · harai…, so any throw's name translates itself), **Technique Categories**, **Pins, Chokes & Locks** (the 17 katame-waza on the ATJA kyu exam, each noted with its grade), and **Scoring & Penalties**
 - Two ways to study: **flashcards** (flip romaji · kanji → meaning, with prev / next / shuffle) or a grouped **glossary** — both filter by category and search across romaji, kanji, meaning, and notes
 - Each term carries its kanji/kana, a concise gloss, and a teaching note; fact-checked against the Kodokan, the IJF rules, and the Wikipedia judo glossary (e.g. the current **68** nage-waza and **32** katame-waza, post-2017 revision, and the **yuko** score the IJF brought back in 2025)
 - The Fundamentals, directions, and scoring additions follow Sensei Sami's *Basics of Judo* class notes (CAJA, July 2025)
@@ -167,6 +168,7 @@ python3 -m http.server 8080
 - **Throw animations** courtesy of [judo-caja.com](https://judo-caja.com/techniques.html).
 - **Portrait of Kanō Jigorō** via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Portrait_of_late_Mr._Kano.jpg) (public domain).
 - **Technique list** from [Wikipedia: Kodokan Judo techniques](https://en.wikipedia.org/wiki/List_of_Kodokan_Judo_techniques).
+- **Kyu grades & ATJA names** from the ATJA Judo Kyu Curriculum (v2.0), the syllabus CAJA tests to.
 
 ## License
 
