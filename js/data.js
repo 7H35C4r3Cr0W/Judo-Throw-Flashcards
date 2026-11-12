@@ -90,8 +90,10 @@
   };
 
   /* ═══════════════════════════════════════════════════════════════
-     General judo vocabulary — NOT throws. Commands, roles, body-part
-     modifiers, the waza families, and contest scoring. Kept separate
+     General judo vocabulary — NOT throws. Commands, roles, the
+     fundamentals (falls, stances, footwork), body-part and direction
+     modifiers, the words throw names are built from, the waza families,
+     and contest scoring. Kept separate
      from THROWS (no images, no belt groups) and studied as plain
      flip-cards in the Terms section. Fact-checked against the Kodokan,
      the IJF rules, and the Wikipedia judo glossary.
@@ -101,7 +103,9 @@
     { key: "etiquette", label: "Commands & Etiquette", sub: "words heard in the dojo",   color: "#e5484d" },
     { key: "concepts",  label: "Core Concepts",        sub: "principles, gripping & training", color: "#f59e0b" },
     { key: "phases",    label: "Roles & Phases",       sub: "the anatomy of a throw",     color: "#22c55e" },
-    { key: "body",      label: "Body Parts",           sub: "modifiers inside throw names", color: "#3b82f6" },
+    { key: "basics",    label: "Fundamentals",         sub: "falls, stances & footwork",  color: "#14b8a6" },
+    { key: "body",      label: "Body & Direction",     sub: "modifiers inside technique names", color: "#3b82f6" },
+    { key: "names",     label: "Reading Throw Names",  sub: "decode any throw, word by word", color: "#f97316" },
     { key: "waza",      label: "Technique Categories", sub: "the families of waza",       color: "#a855f7" },
     { key: "scoring",   label: "Scoring & Penalties",  sub: "in shiai (contest)",         color: "#ec4899" }
   ];
@@ -125,11 +129,16 @@
     { term: "Ki o tsuke", kanji: "気を付け", english: "Attention!",             category: "etiquette", note: "The call to stand to attention when the class lines up, just before the bows. Also written “kiotsuke.”" },
     { term: "Shomen ni rei", kanji: "正面に礼", english: "Bow to the front",    category: "etiquette", note: "The first bow of the line-up that opens and closes class, made toward the shomen." },
     { term: "Sensei ni rei", kanji: "先生に礼", english: "Bow to the teacher",  category: "etiquette", note: "Called right after the bow to the front; often followed by otagai ni rei — bow to each other." },
+    { term: "Senpai",   kanji: "先輩",     english: "Senior student",           category: "etiquette", note: "A student ahead of you in rank or experience. At line-up the senpai often calls the bow to the teacher." },
+    { term: "Seiza",    kanji: "正座",     english: "Formal kneeling",          category: "etiquette", note: "Kneeling upright, sitting on the heels. Kneel left knee first, rise right knee first — and wait for the senior grades to move before you do." },
+    { term: "Ritsurei", kanji: "立礼",     english: "Standing bow",             category: "etiquette", note: "Bow from a natural standing posture, about 30°. Its kneeling counterpart is zarei (座礼)." },
 
     // ── Core Concepts (principles, gripping & training) ───────
     { term: "Jita Kyoei", kanji: "自他共栄", english: "Mutual welfare and benefit", category: "concepts", note: "One of Kanō’s two guiding principles — mutual prosperity for self and others. Its partner is seiryoku zen’yō (精力善用), maximum efficient use of energy." },
     { term: "Kumi-kata", kanji: "組み方", english: "Gripping method",          category: "concepts", note: "How you take and manage your grips on the judogi before attacking." },
     { term: "Uchi-komi", kanji: "打ち込み", english: "Repetition (fit-in) training", category: "concepts", note: "Drilling a throw’s entry (kuzushi + tsukuri) without completing it — as opposed to nage-komi, which repeats the full throw." },
+    { term: "Hikite",   kanji: "引き手",   english: "Pulling hand",             category: "concepts", note: "Usually holds the sleeve and draws uke off balance." },
+    { term: "Tsurite",  kanji: "釣り手",   english: "Lifting hand",             category: "concepts", note: "Usually holds the lapel (sometimes the back or belt) to lift and steer uke." },
 
     // ── Roles & Phases of a throw ─────────────────────────────
     { term: "Tori",     kanji: "取り",     english: "The one who executes the technique", category: "phases", note: "Literally “taker.”" },
@@ -138,8 +147,20 @@
     { term: "Tsukuri",  kanji: "作り",     english: "Fitting in / positioning", category: "phases", note: "Second phase: entering and setting your body to throw." },
     { term: "Kake",     kanji: "掛け",     english: "Execution of the throw",   category: "phases", note: "Final phase: completing the technique." },
     { term: "Ukemi",    kanji: "受け身",   english: "Breakfall(s)",             category: "phases", note: "The skill of falling safely — the first thing every judoka learns." },
+    { term: "Kime",     kanji: "極め",     english: "Finishing with control",   category: "phases", note: "Often taught as a fourth phase after kake: following through and keeping control as uke lands." },
 
-    // ── Body Parts (modifiers inside throw names) ─────────────
+    // ── Fundamentals (falls, stances & footwork) ──────────────
+    { term: "Ushiro ukemi", kanji: "後ろ受身", english: "Back breakfall",       category: "basics", note: "Fall straight back with the chin tucked, slapping the mat with both arms." },
+    { term: "Yoko ukemi", kanji: "横受身", english: "Side breakfall",           category: "basics", note: "Fall onto your side, slapping with the arm on the side you land on." },
+    { term: "Mae ukemi", kanji: "前受身",  english: "Front breakfall",          category: "basics", note: "Fall forward onto forearms and palms, face turned away from the mat." },
+    { term: "Mae mawari ukemi", kanji: "前回り受身", english: "Forward rolling breakfall", category: "basics", note: "Roll diagonally over one shoulder and finish with a side slap. Also called zenpō kaiten ukemi." },
+    { term: "Shizentai", kanji: "自然体",  english: "Natural posture",          category: "basics", note: "Upright and relaxed. Shizen hontai stands square; migi and hidari shizentai lead with the right or left foot." },
+    { term: "Jigotai",  kanji: "自護体",   english: "Defensive posture",        category: "basics", note: "Wide, low, knees bent. Jigo hontai stands square; migi and hidari jigotai lead with the right or left foot." },
+    { term: "Ayumi ashi", kanji: "歩み足", english: "Walking steps",            category: "basics", note: "The feet pass each other, as in ordinary walking." },
+    { term: "Tsugi ashi", kanji: "継ぎ足", english: "Following steps",          category: "basics", note: "One foot leads and the other follows without passing it — the everyday footwork of judo." },
+    { term: "Tai sabaki", kanji: "体捌き", english: "Body turning",             category: "basics", note: "Moving and turning the whole body to set up a throw or slip an attack: forward, back, and turning (mawari) sabaki." },
+
+    // ── Body & Direction (modifiers inside technique names) ───
     { term: "Ashi",     kanji: "足",       english: "Foot or leg",              category: "body", note: "As in Ashi-waza and De-ashi-barai." },
     { term: "Te",       kanji: "手",       english: "Hand",                     category: "body", note: "As in Te-waza." },
     { term: "Koshi · Goshi", kanji: "腰", english: "Hip",                  category: "body", note: "Voiced to “goshi” inside compounds (O-goshi) — a sound change called rendaku." },
@@ -149,6 +170,25 @@
     { term: "Eri",      kanji: "襟",       english: "Collar / lapel",           category: "body", note: "As in Okuri-eri-jime." },
     { term: "Sode",     kanji: "袖",       english: "Sleeve",                   category: "body", note: "As in Sode-tsurikomi-goshi." },
     { term: "Kubi",     kanji: "首",       english: "Neck",                     category: "body", note: "首 is the neck specifically; the head is atama (頭)." },
+    { term: "Mae",      kanji: "前",       english: "Front / forward",          category: "body", note: "As in Mae-ukemi." },
+    { term: "Ushiro",   kanji: "後ろ",     english: "Back / rear",              category: "body", note: "As in Ushiro-goshi and Ushiro-ukemi." },
+    { term: "Yoko",     kanji: "横",       english: "Side",                     category: "body", note: "As in Yoko-otoshi and Yoko-shiho-gatame." },
+    { term: "Migi",     kanji: "右",       english: "Right",                    category: "body", note: "As in migi shizentai — right natural posture." },
+    { term: "Hidari",   kanji: "左",       english: "Left",                     category: "body", note: "As in hidari shizentai — left natural posture." },
+    { term: "Mawari",   kanji: "回り",     english: "Turning / rotation",       category: "body", note: "As in Mae-mawari-ukemi, the forward rolling breakfall." },
+
+    // ── Reading Throw Names (the words a throw is built from) ─
+    { term: "O",        kanji: "大",       english: "Large / major",            category: "names", note: "Written Ō with a long vowel. O-soto-gari = large · outside · reap." },
+    { term: "Ko",       kanji: "小",       english: "Small / minor",            category: "names", note: "Ko-uchi-gari = small · inside · reap." },
+    { term: "Soto",     kanji: "外",       english: "Outside / outer",          category: "names", note: "Ko-soto-gake = small · outside · hook." },
+    { term: "Uchi",     kanji: "内",       english: "Inside / inner",           category: "names", note: "Uchi-mata = inner thigh." },
+    { term: "Gari",     kanji: "刈",       english: "Reap",                     category: "names", note: "Kari (刈り), voiced to “gari” inside a name: O-soto-gari, Ko-uchi-gari." },
+    { term: "Harai",    kanji: "払",       english: "Sweep",                    category: "names", note: "As in Harai-goshi; often voiced “barai” — De-ashi-barai." },
+    { term: "Guruma",   kanji: "車",       english: "Wheel",                    category: "names", note: "Kuruma, voiced inside a name: Hiza-guruma, Ashi-guruma." },
+    { term: "Otoshi",   kanji: "落",       english: "Drop",                     category: "names", note: "Tai-otoshi = body drop; Tani-otoshi = valley drop." },
+    { term: "Nage",     kanji: "投",       english: "Throw",                    category: "names", note: "Seoi-nage = shoulder throw; also the root of nage-waza." },
+    { term: "Gaeshi",   kanji: "返",       english: "Reversal",                 category: "names", note: "Kaeshi, voiced inside a name: Sumi-gaeshi. Kaeshi-waza are counter-throws." },
+    { term: "Makikomi", kanji: "巻込",     english: "Wrap-around",              category: "names", note: "Tori winds uke around their own body and falls with them: Soto-makikomi." },
 
     // ── Technique (Waza) Categories ───────────────────────────
     { term: "Nage-waza", kanji: "投技",    english: "Throwing techniques",      category: "waza", note: "The Kodokan recognizes 68 throws (67 before the 2017 revision), divided into te-, koshi-, ashi-, and sutemi-waza." },
@@ -163,7 +203,9 @@
 
     // ── Scoring & Penalties ───────────────────────────────────
     { term: "Ippon",    kanji: "一本",     english: "Full point — instant win", category: "scoring", note: "Ends the match: a clean throw largely on the back, a 20-second pin, or a submission to a lock or choke." },
-    { term: "Waza-ari", kanji: "技あり",   english: "Half-point score",         category: "scoring", note: "Two waza-ari add up to ippon. Since 2017 it is the only score below ippon (yuko was abolished)." },
+    { term: "Waza-ari", kanji: "技あり",   english: "Half-point score",         category: "scoring", note: "Two waza-ari add up to ippon (waza-ari awasete ippon). A 10–19-second hold-down also scores waza-ari." },
+    { term: "Yuko",     kanji: "有効",     english: "Smallest score",           category: "scoring", note: "Brought back by the IJF in 2025, below waza-ari — a 5–9-second hold or a throw that falls short of waza-ari. Any number of yuko never add up to a waza-ari." },
+    { term: "Osaekomi", kanji: "抑え込み", english: "Hold-down is on",          category: "scoring", note: "The referee’s call that a pin has started the clock: 5 s yuko, 10 s waza-ari, 20 s ippon. Toketa (解けた) means the hold is broken." },
     { term: "Shido",    kanji: "指導",     english: "Penalty for a minor infringement", category: "scoring", note: "A caution for stalling or small rule breaks; a third shido becomes hansoku-make." },
     { term: "Hansoku-make", kanji: "反則負け", english: "Disqualification",     category: "scoring", note: "The severe penalty / loss — either a third shido or one serious infringement." }
   ];

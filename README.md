@@ -1,6 +1,6 @@
 # 柔 Judo Throws — Flashcards & Quiz
 
-Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, a full technique library, and a **glossary of general judo terms** (commands, roles, the phases of a throw, body-part modifiers, the waza families, and contest scoring). Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
+Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-card studying, five quiz modes, spaced repetition, a full technique library, and a **glossary of general judo terms** (commands, roles, the phases of a throw, breakfalls, stances and footwork, the words throw names are built from, the waza families, and contest scoring). Vanilla HTML/CSS/JS, **no dependencies, no build step, works offline** (and straight from `file://`).
 
 **Live app → https://7h35c4r3cr0w.github.io/Judo-Throw-Flashcards/**
 
@@ -24,7 +24,7 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 .
 ├── index.html               ← markup for all views
 ├── css/style.css            ← design system (dark "sumi ink" / light "washi paper" themes)
-├── js/data.js               ← the 47 throws + 47 general terms (romaji, kanji, English)
+├── js/data.js               ← the 47 throws + 81 general terms (romaji, kanji, English)
 ├── js/core.js               ← pure logic: decks, distractors, spaced repetition, sanitizers
 ├── js/app.js                ← state, rendering, wiring
 ├── sw.js                    ← service worker (full offline precache)
@@ -68,9 +68,10 @@ Study the **47 throws of the Kodokan Gokyo no Waza & Habukareta Waza** — flip-
 - Per-belt **mastery bars** show how much of each group you've locked in
 
 ### 🈁 Terms — the language of the dojo
-- **47 general judo terms** (not throws) organized into six categories: **Commands & Etiquette**, **Core Concepts**, **Roles & Phases**, **Body Parts**, **Technique Categories**, and **Scoring & Penalties**
+- **81 general judo terms** (not throws) organized into eight categories: **Commands & Etiquette**, **Core Concepts**, **Roles & Phases**, **Fundamentals** (breakfalls, stances, footwork), **Body & Direction**, **Reading Throw Names** (o · ko · soto · uchi · gari · harai…, so any throw's name translates itself), **Technique Categories**, and **Scoring & Penalties**
 - Two ways to study: **flashcards** (flip romaji · kanji → meaning, with prev / next / shuffle) or a grouped **glossary** — both filter by category and search across romaji, kanji, meaning, and notes
-- Each term carries its kanji/kana, a concise gloss, and a teaching note; fact-checked against the Kodokan, the IJF rules, and the Wikipedia judo glossary (e.g. the current **68** nage-waza and **32** katame-waza, post-2017 revision)
+- Each term carries its kanji/kana, a concise gloss, and a teaching note; fact-checked against the Kodokan, the IJF rules, and the Wikipedia judo glossary (e.g. the current **68** nage-waza and **32** katame-waza, post-2017 revision, and the **yuko** score the IJF brought back in 2025)
+- The Fundamentals, directions, and scoring additions follow Sensei Sami's *Basics of Judo* class notes (CAJA, July 2025)
 - **Quiz** the terms on screen — JP → EN, EN → JP, or Mixed — with wrong answers drawn from the same category so they stay plausible
 - Terms use the same **spaced repetition** as throws: mark *I know this* / *Needs review* (`K` / `R`), filter by **Due**, **Marked review**, or **Not yet studied**, and see accuracy, Leitner box, and a *due* badge on every card and glossary tile
 

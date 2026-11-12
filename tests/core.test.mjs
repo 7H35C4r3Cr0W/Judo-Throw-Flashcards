@@ -179,7 +179,7 @@ test("pickTermDistractors: distinct, excludes correct, prefers same category", (
   const keys = new Set(out.map((t) => t.term));
   assert.equal(keys.size, 3);
   assert.ok(!keys.has("Ippon"));
-  // zero jitter → every pick must be from the same category (Scoring has 4 terms → 3 distractors)
+  // zero jitter → every pick must be from the same category (Scoring has 6 terms → 3 distractors)
   assert.ok(out.every((t) => t.category === ippon.category));
 });
 
@@ -541,7 +541,7 @@ test("terms: categories have unique keys and full metadata", () => {
     assert.ok(!keys.has(c.key), `duplicate category key: ${c.key}`);
     keys.add(c.key);
   }
-  assert.equal(TERM_CATEGORIES.length, 6);
+  assert.equal(TERM_CATEGORIES.length, 8);
 });
 
 test("terms: every entry is complete, unique, and in a known category", () => {
@@ -577,9 +577,9 @@ test("terms: category sizes match the deck and every category is used", () => {
   const count = {};
   for (const t of TERMS) count[t.category] = (count[t.category] || 0) + 1;
   assert.deepEqual(count, {
-    etiquette: 16, concepts: 3, phases: 6, body: 9, waza: 9, scoring: 4
+    etiquette: 19, concepts: 5, phases: 7, basics: 9, body: 15, names: 11, waza: 9, scoring: 6
   });
-  assert.equal(TERMS.length, 47);
+  assert.equal(TERMS.length, 81);
   for (const c of TERM_CATEGORIES) {
     assert.ok(count[c.key] > 0, `category ${c.key} has no terms`);
   }
@@ -604,6 +604,10 @@ test("terms: fact-checked corrections are locked in (no regressions)", () => {
   assert.equal(by("Sensei ni rei").kanji, "先生に礼");
   assert.equal(by("Jita Kyoei").kanji, "自他共栄");
   assert.equal(by("Jita Kyoei").english, "Mutual welfare and benefit");
+  // yuko returned in the IJF's 2025 rules: it must exist and waza-ari must not call it abolished
+  assert.ok(by("Yuko"), "Yuko is a current score again");
+  assert.doesNotMatch(by("Waza-ari").note, /abolished/i);
+  assert.match(by("Osaekomi").note, /20 s ippon/);
 });
 
 test("filterTerms: null categories returns everything, query matches all fields", () => {
@@ -635,11 +639,11 @@ test("filterTerms: null categories returns everything, query matches all fields"
 
 test("filterTerms: category set restricts, empty set yields none", () => {
   const scoring = C.filterTerms(TERMS, { query: "", categories: new Set(["scoring"]) });
-  assert.equal(scoring.length, 4);
+  assert.equal(scoring.length, 6);
   assert.ok(scoring.every((t) => t.category === "scoring"));
 
   const bodyAndScoring = C.filterTerms(TERMS, { query: "", categories: new Set(["body", "scoring"]) });
-  assert.equal(bodyAndScoring.length, 13);
+  assert.equal(bodyAndScoring.length, 21);
 
   assert.equal(C.filterTerms(TERMS, { query: "", categories: new Set() }).length, 0);
 
