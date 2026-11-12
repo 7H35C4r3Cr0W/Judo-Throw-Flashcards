@@ -31,7 +31,7 @@
     { name: "Uchi Mata",            kanji: "内股",     english: "Inner Thigh Throw",           img: "images/technique/uchi_mata.gif",          group: "Dai Nikyo",       belt: "Orange", atja: { kyu: 3, english: "Inner Thigh Sweep" } },
 
     // ── Dai Sankyo (3rd group) ────────────────────────────────
-    { name: "Kosoto Gake",          kanji: "小外掛",   english: "Small Outer Hook",            img: "images/technique/kosotogake.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 3, english: "Minor Outer Dash Throw" } },
+    { name: "Kosoto Gake",          kanji: "小外掛",   english: "Small Outer Hook",            img: "images/technique/kosotogake.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 3, english: "Minor Outer Hook Throw" } },
     { name: "Tsuri Goshi",          kanji: "釣腰",     english: "Lifting Hip Throw",           img: "images/technique/tsuri_goshi.gif",        group: "Dai Sankyo",      belt: "Green", atja: { kyu: 3, english: "Lifting Hip Throw" } },
     { name: "Yoko Otoshi",          kanji: "横落",     english: "Side Drop",                   img: "images/technique/yoko_otoshi.gif",        group: "Dai Sankyo",      belt: "Green", atja: { kyu: 1, english: "Lateral Drop Throw" } },
     { name: "Ashi Guruma",          kanji: "足車",     english: "Leg Wheel",                   img: "images/technique/ashiguruma.gif",         group: "Dai Sankyo",      belt: "Green", atja: { kyu: 2, english: "Leg Wheel Throw" } },
@@ -71,8 +71,9 @@
   ];
 
   /* ATJA Judo Kyu Curriculum (v2.0): the senior grade at which each throw
-     is first tested, and ATJA's own English name for it (kept verbatim —
-     it is what students see on the exam form). 24 of its 25 throws are
+     is first tested, and ATJA's own English name for it (kept as written —
+     it is what students see on the exam form — except Kosoto Gake, whose
+     "Minor Outer Dash Throw" is a typo for Hook). 24 of its 25 throws are
      here; Kata Guruma (1st kyu) has no working animation. */
   var ATJA_KYU = {
     6: { label: "6th kyu", belt: "Yellow", color: "#eab308" },
